@@ -217,15 +217,27 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
-def serve_dashboard_home():
+def serve_realtime_dashboard():
     """
-    Serves the main tactical dashboard single page.
+    Serves the 100% Real-Time Operational Dashboard for Friday's emergency monitoring.
     """
-    index_path = os.path.join(STATIC_DIR, "index.html")
+    index_path = os.path.join(STATIC_DIR, "index_realtime.html")
     if os.path.exists(index_path):
         with open(index_path, "r", encoding="utf-8") as f:
             return f.read()
-    return "<h1>Dashboard Assets Building... Please refresh.</h1>"
+    return "<h1>Operational Dashboard Loading...</h1>"
+
+
+@app.get("/demo", response_class=HTMLResponse)
+def serve_demo_dashboard():
+    """
+    Serves the Interactive Demo & Storm Simulation Dashboard for presentations to Firefighters and Authorities.
+    """
+    demo_path = os.path.join(STATIC_DIR, "demo.html")
+    if os.path.exists(demo_path):
+        with open(demo_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>Demo Dashboard Loading...</h1>"
 
 
 if __name__ == "__main__":
