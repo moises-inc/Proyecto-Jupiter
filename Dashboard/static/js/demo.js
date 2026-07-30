@@ -303,7 +303,7 @@ function renderDemoDashboard(data) {
         <div class="sector-name">${s.name}</div>
         <div class="sector-vulnerability"><strong>Peligro:</strong> ${s.disaster_type}</div>
         <div class="sector-vulnerability" style="color: var(--brand-blue); margin-top: 2px;">
-          <strong>ETA Impacto:</strong> ${s.eta_impact} (Tc: ${s.concentration_time_hours}h) • Cota ${s.elevation_m}m
+          <strong>ETA Pico:</strong> ${s.eta_impact} (Tc: ${s.concentration_time_hours}h) • <strong style="color: #2ECC71;">Retorno Seguro:</strong> ${s.eta_safe_return || '17:00 hrs'}
         </div>
       </div>
       <span class="sector-badge ${badgeClass}">${s.semaforo} (${s.score_pct}%)</span>
@@ -366,13 +366,14 @@ function updateMapMarker(sector) {
   }).addTo(map);
 
   const popupContent = `
-    <div style="color: #070C18; font-family: sans-serif; min-width: 230px;">
+    <div style="color: #070C18; font-family: sans-serif; min-width: 240px;">
       <strong style="font-size: 0.95rem; color: #00205B;">${sector.name}</strong><br>
       <hr style="margin: 4px 0; border: 0; border-top: 1px solid #ccc;">
       <b>Estado:</b> ${sector.semaforo}<br>
       <b>Riesgo ML:</b> ${sector.score_pct}%<br>
-      <b>Peligro Específico:</b> ${sector.disaster_type}<br>
-      <b>ETA Impacto:</b> ${sector.eta_impact} (Tc: ${sector.concentration_time_hours}h)<br>
+      <b>ETA Pico Inundación:</b> ${sector.eta_impact} (Tc: ${sector.concentration_time_hours}h)<br>
+      <b style="color: #2E7D32;">ETA Retorno Seguro:</b> ${sector.eta_safe_return || '17:00 hrs'}<br>
+      <b>Transitabilidad:</b> ${sector.transitability_status || 'TRANSITABLE'}<br>
       <b>Radio Cobertura:</b> ${sector.radius_m}m • <b>Cota:</b> ${sector.elevation_m} m.n.m.
     </div>
   `;

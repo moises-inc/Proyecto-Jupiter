@@ -1,8 +1,8 @@
 """
-Proyecto Centinela - Spatial Grid Scanner Module
+Proyecto Centinela - Spatial Grid Scanner Module (v5.0)
 Performs a 20-zone high-resolution geographic risk scan across 100% of La Serena footprint,
-calibrated with pinpoint WGS84 coordinates for Pueblo Islón and Lambert, precise disaster classification,
-and Estimated Time of Arrival (ETA) calculation.
+calibrated with pinpoint WGS84 coordinates for Pueblo Islón and Lambert, SCS-CN hydrology,
+forecast lead-times (+1h/+3h/+6h), ETA of Impact, and ETA of Safe Return (Calma / Transitabilidad).
 """
 
 import os
@@ -15,205 +15,225 @@ from src.features.feature_engineering import generate_hydrological_features, FEA
 from src.inference.live_inference import load_centinela_model
 
 
-# 20 High-Resolution Geographic Sectors with exact calibrated WGS84 coordinates
+# 20 High-Resolution Geographic Sectors with calibrated WGS84, SCS-CN, and Clearance Recovery times
 LA_SERENA_SECTOR_GRID = {
     "pueblo_islon": {
-        "scs_cn": 88,
-        "name": "Pueblo Islón / Puente D-201",
+        "name": "Pueblo Islón / Quebrada Santa Gracia",
         "type": "Precordillera / Ribereño",
         "elevation_m": 120, "radius_m": 1000,
         "disaster_type": "Aluvión y Escorrentía Detrítica en Quebrada",
         "concentration_time_hours": 1.5,
+        "recovery_drain_hours": 2.5,  # Hours post-peak to achieve safe clearance
+        "scs_cn": 88,
         "weight_precip_short": 0.50, "weight_api": 0.35, "weight_freezing": 0.15,
-        "lat": -29.878, "lon": -71.218  # Pinpoint Pueblo Islón town center on D-201
+        "lat": -29.878, "lon": -71.218
     },
     "lambert_minero": {
-        "scs_cn": 88,
-        "name": "Lambert (Poblado y Escuela)",
+        "name": "Lambert & Acceso Minero Norte",
         "type": "Precordillera / Minero",
         "elevation_m": 220, "radius_m": 1200,
         "disaster_type": "Aluvión en Quebrada y Aislamiento Rural",
         "concentration_time_hours": 1.5,
+        "recovery_drain_hours": 2.5,
+        "scs_cn": 88,
         "weight_precip_short": 0.45, "weight_api": 0.35, "weight_freezing": 0.20,
-        "lat": -29.818, "lon": -71.148  # Pinpoint Lambert village center on D-201
+        "lat": -29.818, "lon": -71.148
     },
     "el_brillador_quebrada": {
-        "scs_cn": 88,
         "name": "El Brillador & Quebrada Norte",
         "type": "Cerros y Quebradas Norte",
         "elevation_m": 310, "radius_m": 1400,
         "disaster_type": "Escorrentía Rápida en Ladera Minera",
         "concentration_time_hours": 1.2,
+        "recovery_drain_hours": 2.0,
+        "scs_cn": 88,
         "weight_precip_short": 0.50, "weight_api": 0.30, "weight_freezing": 0.20,
-        "lat": -29.825, "lon": -71.175  # El Brillador hill district
+        "lat": -29.825, "lon": -71.175
     },
     "santa_gracia_alta": {
-        "scs_cn": 88,
         "name": "Santa Gracia Alta / Pelícano",
         "type": "Alta Precordillera",
         "elevation_m": 380, "radius_m": 1600,
         "disaster_type": "Aluvión de Alta Quebrada",
         "concentration_time_hours": 1.0,
+        "recovery_drain_hours": 2.0,
+        "scs_cn": 88,
         "weight_precip_short": 0.50, "weight_api": 0.30, "weight_freezing": 0.20,
         "lat": -29.785, "lon": -71.130
     },
     "las_rojas": {
-        "scs_cn": 88,
         "name": "Las Rojas & Entrada Precordillera",
         "type": "Valle Precordillerano",
         "elevation_m": 240, "radius_m": 1400,
         "disaster_type": "Aluvión en Quebrada y Corte Ruta D-41",
         "concentration_time_hours": 1.5,
+        "recovery_drain_hours": 3.0,
+        "scs_cn": 88,
         "weight_precip_short": 0.45, "weight_api": 0.35, "weight_freezing": 0.20,
         "lat": -29.970, "lon": -71.055
     },
     "algarrobito_gabriela": {
-        "scs_cn": 88,
         "name": "Algarrobito / Gabriela Mistral / Quebrada Talca",
         "type": "Valle Ribereño Precordillerano",
         "elevation_m": 170, "radius_m": 1400,
         "disaster_type": "Escorrentía Detrítica y Crecida de Quebrada",
         "concentration_time_hours": 2.0,
+        "recovery_drain_hours": 3.0,
+        "scs_cn": 85,
         "weight_precip_short": 0.45, "weight_api": 0.40, "weight_freezing": 0.15,
         "lat": -29.960, "lon": -71.120
     },
     "altovalsol": {
-        "scs_cn": 75,
         "name": "Altovalsol & Valle Medio",
         "type": "Rural Ribereño",
         "elevation_m": 110, "radius_m": 1200,
         "disaster_type": "Crecida de Cauce y Escorrentía Agrícola",
         "concentration_time_hours": 2.5,
+        "recovery_drain_hours": 3.5,
+        "scs_cn": 75,
         "weight_precip_short": 0.40, "weight_api": 0.45, "weight_freezing": 0.15,
         "lat": -29.945, "lon": -71.165
     },
     "coquimbito_bellavista": {
-        "scs_cn": 75,
         "name": "Coquimbito / Bellavista / Pan de Azúcar Norte",
         "type": "Agrícola Periurbano",
         "elevation_m": 85, "radius_m": 1200,
         "disaster_type": "Apozamiento Agrícola y Escorrentía de Faldeo",
         "concentration_time_hours": 3.0,
+        "recovery_drain_hours": 3.5,
+        "scs_cn": 75,
         "weight_precip_short": 0.40, "weight_api": 0.45, "weight_freezing": 0.15,
         "lat": -29.955, "lon": -71.185
     },
     "las_companias_alta": {
-        "scs_cn": 90,
         "name": "Las Compañías (Alta y Villa Lambert)",
         "type": "Urbano / Periurbano Denso",
         "elevation_m": 60, "radius_m": 1000,
         "disaster_type": "Aislamiento Territorial y Colapso Pluvial",
         "concentration_time_hours": 3.0,
+        "recovery_drain_hours": 2.5,
+        "scs_cn": 90,
         "weight_precip_short": 0.40, "weight_api": 0.45, "weight_freezing": 0.15,
         "lat": -29.860, "lon": -71.240
     },
     "las_companias_baja": {
-        "scs_cn": 90,
         "name": "Las Compañías (Baja y Sector Esmeralda)",
         "type": "Urbano Denso",
         "elevation_m": 40, "radius_m": 900,
         "disaster_type": "Anegamiento Vial Urbano y Colectores",
         "concentration_time_hours": 3.5,
+        "recovery_drain_hours": 2.0,
+        "scs_cn": 90,
         "weight_precip_short": 0.45, "weight_api": 0.45, "weight_freezing": 0.10,
         "lat": -29.875, "lon": -71.245
     },
     "compania_baja_ribereno": {
-        "scs_cn": 90,
         "name": "Sector Ribereño Norte (Puentes Libertador / Zorrilla)",
         "type": "Urbano Ribereño Bajo",
         "elevation_m": 20, "radius_m": 800,
         "disaster_type": "Inundación por Desborde del Río Elqui",
         "concentration_time_hours": 4.0,
+        "recovery_drain_hours": 5.0,  # River flooding takes longer to recede
+        "scs_cn": 85,
         "weight_precip_short": 0.35, "weight_api": 0.50, "weight_freezing": 0.15,
         "lat": -29.888, "lon": -71.250
     },
     "caleta_san_pedro": {
-        "scs_cn": 70,
         "name": "Caleta San Pedro & Borde Norte",
         "type": "Costero / Borde Marítimo",
         "elevation_m": 8, "radius_m": 1200,
         "disaster_type": "Inundación Costera y Marejadas",
         "concentration_time_hours": 5.0,
+        "recovery_drain_hours": 4.0,
+        "scs_cn": 70,
         "weight_precip_short": 0.40, "weight_api": 0.45, "weight_freezing": 0.15,
         "lat": -29.855, "lon": -71.275
     },
     "centro_historico": {
-        "scs_cn": 90,
         "name": "Centro Histórico & Damero Comercial",
         "type": "Urbano Denso / Comercial",
         "elevation_m": 30, "radius_m": 800,
         "disaster_type": "Anegamiento de Colectores Pluviales",
         "concentration_time_hours": 3.5,
+        "recovery_drain_hours": 1.5,  # Urban drains flush relatively fast after rain stops
+        "scs_cn": 92,
         "weight_precip_short": 0.55, "weight_api": 0.35, "weight_freezing": 0.10,
         "lat": -29.902, "lon": -71.252
     },
     "amunategui_mall": {
-        "scs_cn": 90,
         "name": "Eje Av. Francisco de Aguirre / Amunátegui / Mall Plaza",
         "type": "Eje Comercial / Cívico",
         "elevation_m": 22, "radius_m": 800,
         "disaster_type": "Inundación de Colectores y Terminal de Buses",
         "concentration_time_hours": 3.5,
+        "recovery_drain_hours": 1.5,
+        "scs_cn": 92,
         "weight_precip_short": 0.55, "weight_api": 0.35, "weight_freezing": 0.10,
         "lat": -29.908, "lon": -71.256
     },
     "la_pampa": {
-        "scs_cn": 90,
         "name": "La Pampa & Eje Av. Balmaceda",
         "type": "Urbano Residencial",
         "elevation_m": 45, "radius_m": 1000,
         "disaster_type": "Anegamiento Vial y Saturación de Colectores",
         "concentration_time_hours": 3.5,
+        "recovery_drain_hours": 2.0,
+        "scs_cn": 88,
         "weight_precip_short": 0.50, "weight_api": 0.40, "weight_freezing": 0.10,
         "lat": -29.920, "lon": -71.245
     },
     "el_milagro": {
-        "scs_cn": 90,
         "name": "El Milagro & San Joaquín",
         "type": "Residencial Terraza Media",
         "elevation_m": 90, "radius_m": 1000,
         "disaster_type": "Escorrentía Superficial en Pendiente",
         "concentration_time_hours": 2.5,
+        "recovery_drain_hours": 1.5,
+        "scs_cn": 85,
         "weight_precip_short": 0.45, "weight_api": 0.40, "weight_freezing": 0.15,
         "lat": -29.930, "lon": -71.230
     },
     "cerro_grande": {
-        "scs_cn": 88,
         "name": "Cerro Grande & Faldeos Este",
         "type": "Ladera / Faldeo",
         "elevation_m": 210, "radius_m": 1200,
         "disaster_type": "Escorrentía Rápida y Deslizamiento de Ladera",
         "concentration_time_hours": 1.5,
+        "recovery_drain_hours": 2.0,
+        "scs_cn": 88,
         "weight_precip_short": 0.50, "weight_api": 0.35, "weight_freezing": 0.15,
         "lat": -29.940, "lon": -71.210
     },
     "av_del_mar": {
-        "scs_cn": 70,
         "name": "Avenida del Mar & Borde Costero Sur",
         "type": "Borde Costero / Playa",
         "elevation_m": 5, "radius_m": 1200,
         "disaster_type": "Inundación Costera y Salida de Esteros",
         "concentration_time_hours": 5.5,
+        "recovery_drain_hours": 4.5,
+        "scs_cn": 70,
         "weight_precip_short": 0.40, "weight_api": 0.45, "weight_freezing": 0.15,
         "lat": -29.910, "lon": -71.275
     },
     "la_florida": {
-        "scs_cn": 90,
         "name": "Sector La Florida / Aeródromo",
         "type": "Urbano / Servicios",
         "elevation_m": 65, "radius_m": 1000,
         "disaster_type": "Anegamiento Vial Urbano",
         "concentration_time_hours": 3.0,
+        "recovery_drain_hours": 2.0,
+        "scs_cn": 85,
         "weight_precip_short": 0.45, "weight_api": 0.45, "weight_freezing": 0.10,
         "lat": -29.915, "lon": -71.220
     },
     "ruta5_pasos_nivel": {
-        "scs_cn": 90,
         "name": "Ruta 5 Norte & Pasos Bajo Nivel (Km 490-500)",
         "type": "Arteria Vial Crítica",
         "elevation_m": 10, "radius_m": 800,
         "disaster_type": "Corte de Ruta 5 e Inundación de Pasos Bajo Nivel",
         "concentration_time_hours": 4.0,
+        "recovery_drain_hours": 3.0,
+        "scs_cn": 92,
         "weight_precip_short": 0.55, "weight_api": 0.35, "weight_freezing": 0.10,
         "lat": -29.890, "lon": -71.260
     }
@@ -229,6 +249,17 @@ def get_current_nrt_row(df: pd.DataFrame) -> pd.Series:
     if not past_df.empty:
         return past_df.iloc[-1]
     return df.iloc[0]
+
+
+def calculate_scs_direct_runoff(precip_mm: float, cn: float) -> float:
+    """Calculates SCS Direct Runoff Q = (P - 0.2S)^2 / (P + 0.8S)"""
+    if precip_mm <= 0 or cn <= 0:
+        return 0.0
+    S = (25400.0 / cn) - 254.0
+    ia = 0.2 * S
+    if precip_mm <= ia:
+        return 0.0
+    return float(((precip_mm - ia) ** 2) / (precip_mm + 0.8 * S))
 
 
 def scan_full_la_serena_grid() -> dict:
@@ -266,35 +297,44 @@ def scan_full_la_serena_grid() -> dict:
     yellow_count = 0
 
     for key, info in LA_SERENA_SECTOR_GRID.items():
+        cn = info.get("scs_cn", 80)
+        direct_Q = calculate_scs_direct_runoff(precip_24h, cn)
+
         freezing_factor = 1.5 if high_freezing == 1 and info["weight_freezing"] > 0.1 else 1.0
-        
-        scs_cn = info.get("scs_cn", 75)
-        S_val = (25400.0 / scs_cn) - 254.0
-        P_val = precip_24h
-        Q_runoff = ((P_val - 0.2 * S_val)**2) / (P_val + 0.8 * S_val) if P_val > 0.2 * S_val else 0.0
         
         base_score = (
             info["weight_precip_short"] * (precip_6h / 20.0) +
             info["weight_api"] * (api_72h / 25.0) +
-            0.1 * min(1.0, Q_runoff / 10.0) +
-            0.2 * base_ml_prob
+            0.2 * base_ml_prob +
+            0.1 * min(1.0, direct_Q / 10.0) +
+            0.1 * min(1.0, forecast_3h / 15.0)
         )
         
         score = min(1.0, base_score * water_presence * freezing_factor)
         score_pct = round(score * 100.0, 1)
 
         tc_hours = info["concentration_time_hours"]
-        eta_time = current_dt + pd.Timedelta(hours=tc_hours)
-        eta_formatted = eta_time.strftime("%H:%M hrs")
+        drain_hours = info.get("recovery_drain_hours", 2.0)
+
+        eta_impact = current_dt + pd.Timedelta(hours=tc_hours)
+        eta_impact_formatted = eta_impact.strftime("%H:%M hrs")
+
+        # ETA of Safe Return (Calma / Transitabilidad Seguro)
+        total_recovery_hours = tc_hours + drain_hours
+        eta_safe_return = current_dt + pd.Timedelta(hours=total_recovery_hours)
+        eta_safe_formatted = eta_safe_return.strftime("%H:%M hrs")
 
         if score >= 0.7:
             semaforo = "ALERTA ROJA"
+            transitability = f"TRANSITO RESTRICTORIO (Retorno Seguro: {eta_safe_formatted})"
             red_count += 1
         elif score >= 0.4:
             semaforo = "ALERTA AMARILLA"
+            transitability = f"PRECAUCIÓN VIAL (Retorno Seguro: {eta_safe_formatted})"
             yellow_count += 1
         else:
             semaforo = "VERDE ESTABLE"
+            transitability = "TRANSITABLE (Condición Normal)"
 
         scanned_sectors.append({
             "key": key,
@@ -304,14 +344,17 @@ def scan_full_la_serena_grid() -> dict:
             "radius_m": info["radius_m"],
             "disaster_type": info["disaster_type"],
             "concentration_time_hours": tc_hours,
-            "eta_impact": eta_formatted,
-            "score_pct": score_pct,
-            "semaforo": semaforo,
+            "recovery_drain_hours": drain_hours,
+            "eta_impact": eta_impact_formatted,
+            "eta_safe_return": eta_safe_formatted,
+            "transitability_status": transitability,
+            "scs_curve_number": cn,
+            "direct_runoff_Q": round(direct_Q, 2),
             "forecast_1h": round(forecast_1h, 1),
             "forecast_3h": round(forecast_3h, 1),
             "forecast_6h": round(forecast_6h, 1),
-            "scs_curve_number": scs_cn,
-            "direct_runoff_Q": round(Q_runoff, 2),
+            "score_pct": score_pct,
+            "semaforo": semaforo,
             "coordinates": {"lat": info["lat"], "lon": info["lon"]}
         })
 
@@ -336,3 +379,13 @@ def scan_full_la_serena_grid() -> dict:
         },
         "sectors": scanned_sectors
     }
+
+
+if __name__ == "__main__":
+    scan = scan_full_la_serena_grid()
+    print(f"Timestamp: {scan['timestamp']}")
+    print(f"Commune Status: {scan['commune_status']}")
+    print(f"Total Sectors: {scan['total_sectors_scanned']}")
+    print("\nTop 3 Risk Sectors:")
+    for s in scan['sectors'][:3]:
+        print(f" - {s['name']}: {s['semaforo']} ({s['score_pct']}%) | Peak ETA: {s['eta_impact']} | Safe Return: {s['eta_safe_return']}")
