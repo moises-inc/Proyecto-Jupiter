@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initMap();
   initChart();
   fetchScanData();
-  // Poll every 15 seconds for live telemetry
+  
+  // Poll every 15 seconds ONLY when in Live NRT Mode
   setInterval(() => {
     if (!isSimulationMode) {
       fetchScanData();
@@ -31,7 +32,7 @@ function initMap() {
   }).addTo(map);
 }
 
-/* Initialize Trend Chart */
+/* Initialize Dual Y-Axis Trend Chart for Clear Interpretation */
 function initChart() {
   const ctx = document.getElementById('trendChart').getContext('2d');
   trendChart = new Chart(ctx, {
@@ -41,35 +42,99 @@ function initChart() {
       datasets: [
         {
           label: 'Lluvia Acumulada (mm)',
-          data: [0, 0.2, 0.5, 0.8, 1.2, 1.5, 1.5],
+          yAxisID: 'yRain',
+          data: [0, 0, 0, 0.2, 0.5, 0.9, 0.9],
           borderColor: '#00D2FF',
-          backgroundColor: 'rgba(0, 210, 255, 0.1)',
+          backgroundColor: 'rgba(0, 210, 255, 0.15)',
+          borderWidth: 3,
           fill: true,
-          tension: 0.4
+          tension: 0.3
         },
         {
-          label: 'Isoterma Cero (x100m)',
-          data: [35, 36, 37, 38, 40, 40.6, 40.6],
+          label: 'Isoterma Cero (m.n.m.)',
+          yAxisID: 'yFreezing',
+          data: [3800, 3900, 4000, 4050, 4060, 4070, 4070],
           borderColor: '#F1C40F',
-          borderDash: [5, 5],
+          borderDash: [6, 4],
+          borderWidth: 2.5,
+          pointRadius: 4,
           tension: 0.2
         }
       ]
     },
     options: {
       responsive: true,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
       plugins: {
-        legend: { labels: { color: '#94A3B8' } }
+        legend: {
+          labels: { color: '#F0F4F8', font: { family: 'Inter', size: 12, weight: 'bold' } }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.datasetIndex === 0) {
+                label += context.parsed.y + ' mm';
+              } else {
+                label += context.parsed.y.toLocaleString('es-CL') + ' m.n.m.';
+              }
+              return label;
+            }
+          }
+        }
       },
       scales: {
-        x: { ticks: { color: '#64748B' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { ticks: { color: '#64748B' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        x: {
+          ticks: { color: '#94A3B8' },
+          grid: { color: 'rgba(255, 255, 255, 0.05)' }
+        },
+        yRain: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          title: {
+            display: true,
+            text: 'Lluvia Acumulada (mm)',
+            color: '#00D2FF',
+            font: { weight: 'bold' }
+          },
+          min: 0,
+          max: 100,
+          ticks: { color: '#00D2FF' },
+          grid: { color: 'rgba(255, 255, 255, 0.05)' }
+        },
+        yFreezing: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: {
+            display: true,
+            text: 'Isoterma Cero (m.n.m.)',
+            color: '#F1C40F',
+            font: { weight: 'bold' }
+          },
+          min: 1000,
+          max: 5000,
+          ticks: {
+            color: '#F1C40F',
+            callback: function(value) {
+              return value.toLocaleString('es-CL') + ' m';
+            }
+          },
+          grid: { drawOnChartArea: false }
+        }
       }
     }
   });
 }
 
-/* Fetch Spatial Scan Data from Backend */
+/* Fetch Data from API */
 async function fetchScanData() {
   try {
     const url = isSimulationMode ? '/api/simulate-storm?severity=extreme' : '/api/scan';
@@ -77,34 +142,34 @@ async function fetchScanData() {
     const data = await response.json();
     renderDashboard(data);
   } catch (err) {
-    console.error('Error fetching NRT scan data:', err);
+    console.error('Error fetching dashboard payload:', err);
   }
 }
 
-/* Render Dashboard Components */
+/* Render Full Dashboard */
 function renderDashboard(data) {
-  // 1. Render Status Banner
+  // 1. Status Banner
   const bannerBox = document.getElementById('status-banner-box');
   const statusText = document.getElementById('commune-status-text');
   const summarySubtext = document.getElementById('status-summary-subtext');
   const timeTag = document.getElementById('timestamp-tag-text');
 
   statusText.innerText = data.commune_status;
-  timeTag.innerText = `Última Actualización: ${data.timestamp}`;
+  timeTag.innerText = `Timestamp: ${data.timestamp}`;
 
   bannerBox.className = 'status-banner';
   if (data.commune_status.includes('ROJA')) {
     bannerBox.classList.add('banner-rojo');
-    summarySubtext.innerText = '⚠️ ALERTA MÁXIMA DE DESBORDE Y ALUVIÓN: Activar evacuación preventiva en sectores críticos.';
+    summarySubtext.innerText = '🚨 ALERTA MÁXIMA DE DESBORDE Y ALUVIÓN: Activar evacuación preventiva inmediata.';
   } else if (data.commune_status.includes('AMARILLA')) {
     bannerBox.classList.add('banner-amarillo');
-    summarySubtext.innerText = '⚠️ PRE-ALERTA Y MONITOREO ACTIVO: Puestos de mando en preparación en La Serena.';
+    summarySubtext.innerText = '⚠️ PRE-ALERTA Y MONITOREO ACTIVO: Preparar Puestos de Mando en La Serena.';
   } else {
     bannerBox.classList.add('banner-verde');
     summarySubtext.innerText = 'Monitoreo satelital activo NRT sin riesgo inminente de desborde hidrológico.';
   }
 
-  // 2. Render KPIs
+  // 2. Telemetry KPIs
   const t = data.telemetry_summary;
   document.getElementById('kpi-rain-24h').innerHTML = `${t.precip_accum_24h_mm} <span class="kpi-unit">mm</span>`;
   document.getElementById('kpi-rain-6h-sub').innerText = `Últimas 6 horas: ${t.precip_accum_6h_mm} mm`;
@@ -114,7 +179,7 @@ function renderDashboard(data) {
   const maxRisk = data.sectors.length > 0 ? data.sectors[0].score_pct : 0;
   document.getElementById('kpi-ml-risk').innerHTML = `${maxRisk}%`;
 
-  // 3. Render Sector Matrix
+  // 3. Sector Risk Matrix List
   const sectorContainer = document.getElementById('sector-grid-list');
   sectorContainer.innerHTML = '';
 
@@ -135,17 +200,17 @@ function renderDashboard(data) {
     `;
     sectorContainer.appendChild(card);
 
-    // Update Map Marker
     updateMapMarker(s);
   });
 
-  // 4. Render Tactical Actions
+  // 4. Tactical Actions
   renderTacticalActions(data);
 
-  // 5. Update Trend Chart Data if in Simulation Mode
-  if (isSimulationMode) {
-    trendChart.data.datasets[0].data = [0, 15, 35, 60, 85, 85, 85];
-    trendChart.data.datasets[1].data = [28, 30, 33, 35, 35, 35, 35];
+  // 5. Update Trend Chart Series with Dual Axes
+  if (data.trend_series && trendChart) {
+    trendChart.data.labels = data.trend_series.labels;
+    trendChart.data.datasets[0].data = data.trend_series.rain_accum_mm;
+    trendChart.data.datasets[1].data = data.trend_series.freezing_level_m;
     trendChart.update();
   }
 }
@@ -163,17 +228,18 @@ function updateMapMarker(sector) {
   }
 
   const circle = L.circleMarker(coords, {
-    radius: 12,
+    radius: 14,
     fillColor: color,
     color: '#FFFFFF',
     weight: 2,
     opacity: 1,
-    fillOpacity: 0.8
+    fillOpacity: 0.85
   }).addTo(map);
 
   circle.bindPopup(`
-    <div style="color: #070C18; font-family: sans-serif;">
+    <div style="color: #070C18; font-family: sans-serif; min-width: 200px;">
       <strong style="font-size: 1rem;">${sector.name}</strong><br>
+      <hr style="margin: 4px 0;">
       <b>Estado:</b> ${sector.semaforo}<br>
       <b>Riesgo ML:</b> ${sector.score_pct}%<br>
       <b>Vulnerabilidad:</b> ${sector.vulnerability}<br>
@@ -184,7 +250,7 @@ function updateMapMarker(sector) {
   sectorMarkers[sector.key] = circle;
 }
 
-/* Render Tactical Actions based on Risks */
+/* Render Tactical Actions */
 function renderTacticalActions(data) {
   const container = document.getElementById('tactical-actions-list');
   container.innerHTML = '';
@@ -220,7 +286,7 @@ function renderTacticalActions(data) {
     container.innerHTML = `
       <div class="action-item">
         <div class="action-title">✅ CONDICIONES NORMALES DE MONITOREO</div>
-        <div class="action-desc">No se requieren acciones tácticas de emergencia. Próximo escaneo automático en 15 segundos.</div>
+        <div class="action-desc">No se requieren acciones tácticas de emergencia. Próximo escaneo automático NRT en 15 segundos.</div>
       </div>
     `;
   }
@@ -235,11 +301,19 @@ function toggleStormSimulation() {
 
   if (isSimulationMode) {
     simBtn.innerText = '🔄 Volver a Modo En Vivo NRT';
+    simBtn.style.background = 'rgba(231, 76, 60, 0.2)';
+    simBtn.style.borderColor = '#E74C3C';
+    simBtn.style.color = '#E74C3C';
+    
     liveText.innerText = 'MODO SIMULACIÓN (TEMPORAL JULIO 2026)';
-    document.getElementById('live-indicator').style.borderColor = '#F1C40F';
-    document.getElementById('live-indicator').style.color = '#F1C40F';
+    document.getElementById('live-indicator').style.borderColor = '#E74C3C';
+    document.getElementById('live-indicator').style.color = '#E74C3C';
   } else {
     simBtn.innerText = '⚡ Simular Tormenta Extrema';
+    simBtn.style.background = 'rgba(241, 196, 15, 0.15)';
+    simBtn.style.borderColor = '#F1C40F';
+    simBtn.style.color = '#F1C40F';
+    
     liveText.innerText = 'SISTEMA EN VIVO (NRT)';
     document.getElementById('live-indicator').style.borderColor = '#2ECC71';
     document.getElementById('live-indicator').style.color = '#2ECC71';

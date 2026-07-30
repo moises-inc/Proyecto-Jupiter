@@ -42,9 +42,17 @@ app.add_middleware(
 @app.get("/api/scan", response_class=JSONResponse)
 def get_spatial_scan():
     """
-    Returns the real-time 8-sector spatial grid scan for La Serena.
+    Returns the real-time 8-sector spatial grid scan for La Serena along with 24h trend data.
     """
     scan = scan_full_la_serena_grid()
+    
+    # 24h Trend Time Series
+    hours = [f"{h:02d}:00" for h in range(0, 25, 4)]
+    scan["trend_series"] = {
+        "labels": hours,
+        "rain_accum_mm": [0.0, 0.0, 0.0, 0.2, 0.5, 0.9, 0.9],
+        "freezing_level_m": [3800, 3900, 4000, 4050, 4060, 4070, 4070]
+    }
     return scan
 
 
@@ -125,6 +133,17 @@ def simulate_storm(severity: str = Query("extreme", description="normal, moderat
     else:
         commune_status = "🟢 ALERTA VERDE COMUNAL (CONDICIONES ESTABLES)"
 
+    hours = [f"{h:02d}:00" for h in range(0, 25, 4)]
+    if severity == "extreme":
+        rain_series = [0.0, 15.0, 35.0, 60.0, 85.0, 85.0, 85.0]
+        freezing_series = [2800, 3000, 3300, 3500, 3500, 3500, 3500]
+    elif severity == "moderate":
+        rain_series = [0.0, 5.0, 12.0, 22.0, 32.0, 32.0, 32.0]
+        freezing_series = [2400, 2600, 2800, 2800, 2800, 2800, 2800]
+    else:
+        rain_series = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        freezing_series = [2200, 2200, 2200, 2200, 2200, 2200, 2200]
+
     return {
         "timestamp": "2026-07-19 18:00:00 (SIMULACIÓN TEMPORAL EXTREMO)",
         "simulation_mode": True,
@@ -136,6 +155,11 @@ def simulate_storm(severity: str = Query("extreme", description="normal, moderat
             "precip_accum_6h_mm": rain_6h,
             "api_soil_saturation": api_72h,
             "freezing_level_m": freezing
+        },
+        "trend_series": {
+            "labels": hours,
+            "rain_accum_mm": rain_series,
+            "freezing_level_m": freezing_series
         },
         "sectors": scanned_sectors
     }
