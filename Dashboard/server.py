@@ -164,7 +164,7 @@ def simulate_storm(severity: str = Query("extreme", description="normal, moderat
 
         tc_hours = info["concentration_time_hours"]
         eta_time = base_time + pd.Timedelta(hours=tc_hours)
-        eta_formatted = eta_time.strftime("%H:%M hrs")
+        eta_formatted = eta_time.strftime("%d/%m/%Y %H:%M hrs")
 
         if score >= 0.7:
             semaforo = "ALERTA ROJA"

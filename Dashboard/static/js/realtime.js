@@ -17,14 +17,28 @@ let sciLogEntries = [
   { timestamp: "21:00 hrs", sector: "Pueblo Islón / Quebrada Santa Gracia", user: "Mando Bomberos 1", severity: "Estable", desc: "Inicio de guardia NRT. Sin precipitaciones en cuenca precordillerana." }
 ];
 
+let lastSyncTimestamp = "";
+
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
   initChart();
   fetchLiveScanData();
   renderSciLogList();
   
+  updateLiveClock();
+  setInterval(updateLiveClock, 1000);
   setInterval(fetchLiveScanData, 5000);
 });
+
+function updateLiveClock() {
+  const timeTag = document.getElementById('timestamp-tag-text');
+  if (!timeTag) return;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const syncInfo = lastSyncTimestamp ? ` | Telemetría NRT: ${lastSyncTimestamp}` : '';
+  timeTag.innerHTML = `⏱️ ${dateStr} ${timeStr} hrs${syncInfo}`;
+}
 
 function initMap() {
   map = L.map('map').setView([-29.900, -71.210], 11);
@@ -213,6 +227,7 @@ function initChart() {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { labels: { color: '#F0F4F8', font: { family: 'Inter', size: 11, weight: 'bold' } } }
@@ -249,10 +264,11 @@ function renderLiveDashboard(data) {
   const bannerBox = document.getElementById('status-banner-box');
   const statusText = document.getElementById('commune-status-text');
   const summarySubtext = document.getElementById('status-summary-subtext');
-  const timeTag = document.getElementById('timestamp-tag-text');
+  
+  lastSyncTimestamp = data.timestamp;
+  updateLiveClock();
 
   statusText.innerText = data.commune_status;
-  timeTag.innerText = `Timestamp: ${data.timestamp}`;
 
   bannerBox.className = 'status-banner';
   if (data.commune_status.includes('ROJA')) {

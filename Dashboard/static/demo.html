@@ -130,9 +130,9 @@
       </div>
     </div>
 
-    <!-- Right Column: Tactical Assistant, Trends & SCI Incident Log -->
+    <!-- Right Column: Tactical Assistant -->
     <div class="right-column">
-      <div class="card-box">
+      <div class="card-box" style="height: 100%;">
         <div class="box-header">
           <div class="box-title">Recomendaciones Tácticas SCI (Bomberos)</div>
         </div>
@@ -141,14 +141,20 @@
           <!-- Injected dynamically -->
         </div>
       </div>
-
-      <div class="card-box">
-        <div class="box-header">
-          <div class="box-title">Tendencia Hidrometeorológica (24 Horas)</div>
-        </div>
-        <canvas id="trendChart" height="200"></canvas>
-      </div>
     </div>
+
+    <!-- Punto 2: Gráfico de Tendencia Hidrometeorológica Ampliado (Full Width Row) -->
+    <section class="sci-log-card" style="margin-top: 0;">
+      <div class="box-header">
+        <div class="box-title" style="font-size: 1.1rem; color: var(--brand-blue);">
+          📊 Tendencia Hidrometeorológica Proyectada (24 Horas)
+        </div>
+        <span class="kpi-subtext">Monitoreo continuo de acumulados pluviométricos e isoterma cero en cordillera</span>
+      </div>
+      <div style="height: 280px; width: 100%; position: relative;">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </section>
 
     <!-- Punto 2: Bitácora Táctica SCI Ampliada (Full Width Row) -->
     <section class="sci-log-card">

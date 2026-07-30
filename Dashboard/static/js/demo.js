@@ -18,12 +18,27 @@ let sciLogEntries = [
   { timestamp: "18:00 hrs", sector: "Pueblo Islón / Quebrada Santa Gracia", user: "Demo Operador", severity: "Moderado", desc: "Simulación de escenario de temporal iniciada. Cuenca alta monitorizada." }
 ];
 
+let lastSyncTimestamp = "";
+
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
   initChart();
   loadDemoScenario('normal');
   renderSciLogList();
+  
+  updateLiveClock();
+  setInterval(updateLiveClock, 1000);
 });
+
+function updateLiveClock() {
+  const timeTag = document.getElementById('timestamp-tag-text');
+  if (!timeTag) return;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const scenarioStr = currentScenario ? ` | Escenario: ${currentScenario.toUpperCase()}` : '';
+  timeTag.innerHTML = `⏱️ ${dateStr} ${timeStr} hrs${scenarioStr}`;
+}
 
 function initMap() {
   map = L.map('map').setView([-29.900, -71.210], 11);
@@ -209,6 +224,7 @@ function initChart() {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { labels: { color: '#F0F4F8', font: { family: 'Inter', size: 11, weight: 'bold' } } }

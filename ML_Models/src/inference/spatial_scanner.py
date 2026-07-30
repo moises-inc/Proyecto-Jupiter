@@ -486,12 +486,12 @@ def scan_full_la_serena_grid() -> dict:
         drain_hours = info.get("recovery_drain_hours", 2.0)
 
         eta_impact = current_dt + pd.Timedelta(hours=tc_hours)
-        eta_impact_formatted = eta_impact.strftime("%H:%M hrs")
+        eta_impact_formatted = eta_impact.strftime("%d/%m/%Y %H:%M hrs")
 
         # ETA of Safe Return (Calma / Transitabilidad Seguro)
         total_recovery_hours = tc_hours + drain_hours
         eta_safe_return = current_dt + pd.Timedelta(hours=total_recovery_hours)
-        eta_safe_formatted = eta_safe_return.strftime("%H:%M hrs")
+        eta_safe_formatted = eta_safe_return.strftime("%d/%m/%Y %H:%M hrs")
 
         if score >= 0.7:
             semaforo = "ALERTA ROJA"

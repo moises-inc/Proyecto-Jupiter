@@ -329,7 +329,7 @@ body {
 
 /* Leaflet Map */
 #map {
-  height: 440px;
+  height: 560px;
   width: 100%;
   border-radius: 8px;
   border: 1px solid var(--card-border);
