@@ -99,7 +99,12 @@ El núcleo predictivo se basa en un modelo de \textit{Random Forest Classifier} 
         S = \frac{25400}{CN} - 254, \quad Q = \frac{(P - 0.2S)^2}{P + 0.8S}
     \end{equation}
     Donde $CN$ representa la impermeabilidad del suelo ($CN=88$ en cerros y $CN=90$ en zonas urbanas).
-    \item \textbf{Pronósticos de Anticipación extendida ($+1\text{h}, +3\text{h}, +6\text{h}, +12\text{h}$):} Vectores meteorológicos proyectados que permiten evaluar el riesgo horas antes de que la lluvia caiga físicamente.
+\item 	extbf{Pronósticos de Anticipación extendida ($+1\text{h}, +3\text{h}, +6\text{h}, +12\text{h}$):} Vectores meteorológicos proyectados que permiten evaluar el riesgo horas antes de que la lluvia caiga físicamente.
+    \item 	extbf{Nowcasting Radar (Tasa de Lluvia):} Transformación de reflectividad radar (dBZ) en tasa instantánea de precipitación mediante relación Marshall-Palmer para estimación a muy corto plazo.
+    \item 	extbf{Factor de Seguridad Geotécnico (FS):} Cálculo analítico de estabilidad de laderas integrando el modelo de talud infinito, dependiente de la saturación antecedente del terreno.
+    \item 	extbf{Enrutamiento Hidrológico (Muskingum-Cunge):} Modelo de propagación de onda cinemática para estimar el caudal y tiempo de viaje del flujo a través de las 35 micro-zonas interconectadas.
+    \item 	extbf{Restricciones Físicas Informadas (PINNs):} Penalización de red neuronal acoplada a las ecuaciones de Saint-Venant (conservación de masa), asegurando coherencia física estricta en el pronóstico.
+    \item 	extbf{Asimilación de Datos Dinámica (EnKF):} Filtro de Kalman por ensambles que actualiza probabilísticamente el riesgo en tiempo real utilizando datos telemétricos de sensores y estaciones en tierra.
 \end{enumerate}
 
 \newpage
@@ -159,6 +164,80 @@ La Figura~\ref{fig:linea_tiempo} resume la secuencia temporal completa.
 \caption{Línea de tiempo de procesamiento del modelo para el viernes 31 de julio.}
 \label{fig:linea_tiempo}
 \end{figure}
+
+\newpage
+
+\section{Fuentes de Datos del Modelo}
+
+El modelo de inteligencia artificial del Proyecto Júpiter fundamenta sus predicciones en un ensamble multi-fuente de datos meteorológicos internacionales, combinados mediante un consenso aritmético y un vector de máximos. A continuación se detallan las fuentes, variables y mecanismos de ingesta.
+
+\subsection{Modelos Meteorológicos Globales}
+
+El sistema consulta simultáneamente tres modelos numéricos de pronóstico del tiempo, operados por las principales agencias meteorológicas del mundo:
+
+\begin{table}[htbp]
+\centering
+\caption{Modelos meteorológicos globales consultados por el sistema.}
+\vspace{0.2cm}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Modelo} & \textbf{Agencia Operadora} & \textbf{Resolución} & \textbf{Cobertura} \\ \midrule
+ECMWF IFS 0.25\textdegree & Centro Europeo (ECMWF) & 25 km & Global \\
+GFS Seamless & NOAA (EE.UU.) & 25 km & Global \\
+ICON Seamless & DWD (Alemania) & 13 km & Global \\ \bottomrule
+\end{tabular}
+\label{tab:modelos}
+\end{table}
+
+\subsection{Variables Meteorológicas Ingestadas}
+
+Cada modelo proporciona las siguientes 7 variables horarias para las coordenadas de La Serena ($-29.897^{\circ}$, $-71.253^{\circ}$):
+
+\begin{enumerate}
+    \item \texttt{precipitation}: Precipitación total horaria (mm).
+    \item \texttt{rain}: Componente líquida de la precipitación (mm).
+    \item \texttt{temperature\_2m}: Temperatura del aire a 2 metros de altura (\textdegree C).
+    \item \texttt{relative\_humidity\_2m}: Humedad relativa del aire a 2 metros (\%).
+    \item \texttt{surface\_pressure}: Presión atmosférica en superficie (hPa).
+    \item \texttt{wind\_speed\_10m}: Velocidad del viento a 10 metros (km/h).
+    \item \texttt{freezing\_level\_height}: Altitud de la isoterma de 0\,\textdegree C (m.s.n.m.).
+\end{enumerate}
+
+\subsection{Método de Consenso del Ensamble}
+
+Las predicciones de precipitación de los tres modelos se fusionan en dos vectores complementarios:
+
+\begin{equation}
+    P_{\text{consenso}}(t) = \frac{P_{\text{ECMWF}}(t) + P_{\text{GFS}}(t) + P_{\text{ICON}}(t)}{3}
+\end{equation}
+\begin{equation}
+    P_{\text{máximo}}(t) = \max\left(P_{\text{ECMWF}}(t),\; P_{\text{GFS}}(t),\; P_{\text{ICON}}(t)\right)
+\end{equation}
+
+El vector $P_{\text{consenso}}$ se utiliza como entrada principal del modelo de IA, mientras que $P_{\text{máximo}}$ se emplea para la detección del pulso pluviométrico extremo dentro de la ventana de pronóstico de 48 horas.
+
+\subsection{Interfaz de Datos y Ciclo de Actualización}
+
+\begin{table}[htbp]
+\centering
+\caption{Detalle de las interfaces de datos utilizadas por el sistema.}
+\vspace{0.2cm}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Interfaz} & \textbf{Endpoint API} & \textbf{Uso} \\ \midrule
+Pronóstico NRT & \texttt{api.open-meteo.com/v1/forecast} & Datos en vivo (5 días + 2 pronóstico) \\
+Archivo Histórico & \texttt{archive-api.open-meteo.com/v1/archive} & Entrenamiento del modelo \\ \bottomrule
+\end{tabular}
+\label{tab:endpoints}
+\end{table}
+
+El ciclo de actualización opera de la siguiente manera:
+
+\begin{itemize}
+    \item \textbf{Frecuencia de ingesta NRT:} Cada 5 minutos, el servidor ejecuta automáticamente una sincronización satelital consultando la API de pronóstico con los 3 modelos simultáneos.
+    \item \textbf{Ventana temporal:} 5 días retrospectivos (para el cálculo de $API_{72h}$ y acumulados) más 2 días de pronóstico futuro (para la detección anticipada de picos).
+    \item \textbf{Fallback de resiliencia:} En caso de pérdida de conectividad, el sistema degrada automáticamente a un modelo único y, si persiste la falla, a un conjunto de datos sintéticos offline que mantiene operativo el tablero táctico.
+\end{itemize}
 
 \section{Conclusiones y Sustento Técnico}
 
