@@ -70,6 +70,19 @@ def generate_hydrological_features(df: pd.DataFrame) -> pd.DataFrame:
     else:
         df["pressure_drop_6h"] = 0.0
 
+
+    # 5.5 Forecast Features (Lead Times)
+    df["precip_forecast_1h"] = df["precipitation"].shift(-1).fillna(0.0)
+    df["precip_forecast_3h"] = df["precip_accum_3h"].shift(-3).fillna(0.0)
+    df["precip_forecast_6h"] = df["precip_accum_6h"].shift(-6).fillna(0.0)
+
+    # 5.6 SCS Curve Number & Runoff
+    df["scs_curve_number"] = 75.0
+    df["potential_retention_S"] = (25400.0 / df["scs_curve_number"]) - 254.0
+    P = df["precip_accum_24h"]
+    S = df["potential_retention_S"]
+    df["direct_runoff_Q"] = np.where(P > 0.2 * S, ((P - 0.2 * S) ** 2) / (P + 0.8 * S), 0.0)
+
     # 6. Target Labels & Calibrated Physical Risk Score
     # Risk should ONLY be active when there is actual precipitation or antecedent soil saturation
     precip_signal = np.clip((df["precip_accum_24h"] + df["precip_accum_6h"] * 2.0) / 15.0, 0.0, 1.0)
@@ -95,21 +108,12 @@ def generate_hydrological_features(df: pd.DataFrame) -> pd.DataFrame:
 
 
 FEATURE_COLUMNS = [
-    "precip_accum_1h",
-    "precip_accum_3h",
-    "precip_accum_6h",
-    "precip_accum_12h",
-    "precip_accum_24h",
-    "precip_accum_72h",
-    "precip_accum_120h",
-    "precip_rate_3h_avg",
-    "precip_max_1h_in_6h",
-    "api_24h",
-    "api_72h",
-    "high_freezing_level_flag",
-    "freezing_level_scaled",
-    "wind_speed_10m",
-    "pressure_drop_6h"
+    "precip_accum_1h", "precip_accum_3h", "precip_accum_6h", "precip_accum_12h", 
+    "precip_accum_24h", "precip_accum_72h", "precip_accum_120h", "precip_rate_3h_avg", 
+    "precip_max_1h_in_6h", "api_24h", "api_72h", "high_freezing_level_flag", 
+    "freezing_level_scaled", "wind_speed_10m", "pressure_drop_6h", 
+    "precip_forecast_1h", "precip_forecast_3h", "precip_forecast_6h", 
+    "scs_curve_number", "potential_retention_S", "direct_runoff_Q"
 ]
 
 

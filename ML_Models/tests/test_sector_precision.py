@@ -42,6 +42,14 @@ def test_spatial_scan_data_integrity():
         assert "radius_m" in sector
         assert sector["radius_m"] >= 800
         assert "hrs" in sector["eta_impact"]
+        
+        # New Feature validations
+        assert "direct_runoff_Q" in sector
+        assert "forecast_1h" in sector
+        assert "scs_curve_number" in sector
+        assert isinstance(sector["direct_runoff_Q"], float)
+        assert isinstance(sector["forecast_1h"], float)
+        assert isinstance(sector["scs_curve_number"], int)
 
 
 def test_ml_risk_sensitivity_under_storm():

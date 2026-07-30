@@ -18,6 +18,7 @@ from src.inference.live_inference import load_centinela_model
 # 20 High-Resolution Geographic Sectors with exact calibrated WGS84 coordinates
 LA_SERENA_SECTOR_GRID = {
     "pueblo_islon": {
+        "scs_cn": 88,
         "name": "Pueblo Islón / Puente D-201",
         "type": "Precordillera / Ribereño",
         "elevation_m": 120, "radius_m": 1000,
@@ -27,6 +28,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.878, "lon": -71.218  # Pinpoint Pueblo Islón town center on D-201
     },
     "lambert_minero": {
+        "scs_cn": 88,
         "name": "Lambert (Poblado y Escuela)",
         "type": "Precordillera / Minero",
         "elevation_m": 220, "radius_m": 1200,
@@ -36,6 +38,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.818, "lon": -71.148  # Pinpoint Lambert village center on D-201
     },
     "el_brillador_quebrada": {
+        "scs_cn": 88,
         "name": "El Brillador & Quebrada Norte",
         "type": "Cerros y Quebradas Norte",
         "elevation_m": 310, "radius_m": 1400,
@@ -45,6 +48,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.825, "lon": -71.175  # El Brillador hill district
     },
     "santa_gracia_alta": {
+        "scs_cn": 88,
         "name": "Santa Gracia Alta / Pelícano",
         "type": "Alta Precordillera",
         "elevation_m": 380, "radius_m": 1600,
@@ -54,6 +58,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.785, "lon": -71.130
     },
     "las_rojas": {
+        "scs_cn": 88,
         "name": "Las Rojas & Entrada Precordillera",
         "type": "Valle Precordillerano",
         "elevation_m": 240, "radius_m": 1400,
@@ -63,6 +68,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.970, "lon": -71.055
     },
     "algarrobito_gabriela": {
+        "scs_cn": 88,
         "name": "Algarrobito / Gabriela Mistral / Quebrada Talca",
         "type": "Valle Ribereño Precordillerano",
         "elevation_m": 170, "radius_m": 1400,
@@ -72,6 +78,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.960, "lon": -71.120
     },
     "altovalsol": {
+        "scs_cn": 75,
         "name": "Altovalsol & Valle Medio",
         "type": "Rural Ribereño",
         "elevation_m": 110, "radius_m": 1200,
@@ -81,6 +88,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.945, "lon": -71.165
     },
     "coquimbito_bellavista": {
+        "scs_cn": 75,
         "name": "Coquimbito / Bellavista / Pan de Azúcar Norte",
         "type": "Agrícola Periurbano",
         "elevation_m": 85, "radius_m": 1200,
@@ -90,6 +98,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.955, "lon": -71.185
     },
     "las_companias_alta": {
+        "scs_cn": 90,
         "name": "Las Compañías (Alta y Villa Lambert)",
         "type": "Urbano / Periurbano Denso",
         "elevation_m": 60, "radius_m": 1000,
@@ -99,6 +108,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.860, "lon": -71.240
     },
     "las_companias_baja": {
+        "scs_cn": 90,
         "name": "Las Compañías (Baja y Sector Esmeralda)",
         "type": "Urbano Denso",
         "elevation_m": 40, "radius_m": 900,
@@ -108,6 +118,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.875, "lon": -71.245
     },
     "compania_baja_ribereno": {
+        "scs_cn": 90,
         "name": "Sector Ribereño Norte (Puentes Libertador / Zorrilla)",
         "type": "Urbano Ribereño Bajo",
         "elevation_m": 20, "radius_m": 800,
@@ -117,6 +128,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.888, "lon": -71.250
     },
     "caleta_san_pedro": {
+        "scs_cn": 70,
         "name": "Caleta San Pedro & Borde Norte",
         "type": "Costero / Borde Marítimo",
         "elevation_m": 8, "radius_m": 1200,
@@ -126,6 +138,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.855, "lon": -71.275
     },
     "centro_historico": {
+        "scs_cn": 90,
         "name": "Centro Histórico & Damero Comercial",
         "type": "Urbano Denso / Comercial",
         "elevation_m": 30, "radius_m": 800,
@@ -135,6 +148,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.902, "lon": -71.252
     },
     "amunategui_mall": {
+        "scs_cn": 90,
         "name": "Eje Av. Francisco de Aguirre / Amunátegui / Mall Plaza",
         "type": "Eje Comercial / Cívico",
         "elevation_m": 22, "radius_m": 800,
@@ -144,6 +158,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.908, "lon": -71.256
     },
     "la_pampa": {
+        "scs_cn": 90,
         "name": "La Pampa & Eje Av. Balmaceda",
         "type": "Urbano Residencial",
         "elevation_m": 45, "radius_m": 1000,
@@ -153,6 +168,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.920, "lon": -71.245
     },
     "el_milagro": {
+        "scs_cn": 90,
         "name": "El Milagro & San Joaquín",
         "type": "Residencial Terraza Media",
         "elevation_m": 90, "radius_m": 1000,
@@ -162,6 +178,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.930, "lon": -71.230
     },
     "cerro_grande": {
+        "scs_cn": 88,
         "name": "Cerro Grande & Faldeos Este",
         "type": "Ladera / Faldeo",
         "elevation_m": 210, "radius_m": 1200,
@@ -171,6 +188,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.940, "lon": -71.210
     },
     "av_del_mar": {
+        "scs_cn": 70,
         "name": "Avenida del Mar & Borde Costero Sur",
         "type": "Borde Costero / Playa",
         "elevation_m": 5, "radius_m": 1200,
@@ -180,6 +198,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.910, "lon": -71.275
     },
     "la_florida": {
+        "scs_cn": 90,
         "name": "Sector La Florida / Aeródromo",
         "type": "Urbano / Servicios",
         "elevation_m": 65, "radius_m": 1000,
@@ -189,6 +208,7 @@ LA_SERENA_SECTOR_GRID = {
         "lat": -29.915, "lon": -71.220
     },
     "ruta5_pasos_nivel": {
+        "scs_cn": 90,
         "name": "Ruta 5 Norte & Pasos Bajo Nivel (Km 490-500)",
         "type": "Arteria Vial Crítica",
         "elevation_m": 10, "radius_m": 800,
@@ -231,6 +251,10 @@ def scan_full_la_serena_grid() -> dict:
     api_72h = float(current_row.get("api_72h", 0.0))
     high_freezing = float(current_row.get("high_freezing_level_flag", 0))
 
+    forecast_1h = float(current_row.get("precip_forecast_1h", 0.0))
+    forecast_3h = float(current_row.get("precip_forecast_3h", 0.0))
+    forecast_6h = float(current_row.get("precip_forecast_6h", 0.0))
+
     precip_signal = np.clip((precip_24h + precip_6h * 2.0) / 15.0, 0.0, 1.0)
     soil_signal = np.clip(api_72h / 15.0, 0.0, 1.0)
     water_presence = max(precip_signal, soil_signal)
@@ -244,9 +268,15 @@ def scan_full_la_serena_grid() -> dict:
     for key, info in LA_SERENA_SECTOR_GRID.items():
         freezing_factor = 1.5 if high_freezing == 1 and info["weight_freezing"] > 0.1 else 1.0
         
+        scs_cn = info.get("scs_cn", 75)
+        S_val = (25400.0 / scs_cn) - 254.0
+        P_val = precip_24h
+        Q_runoff = ((P_val - 0.2 * S_val)**2) / (P_val + 0.8 * S_val) if P_val > 0.2 * S_val else 0.0
+        
         base_score = (
             info["weight_precip_short"] * (precip_6h / 20.0) +
             info["weight_api"] * (api_72h / 25.0) +
+            0.1 * min(1.0, Q_runoff / 10.0) +
             0.2 * base_ml_prob
         )
         
@@ -277,6 +307,11 @@ def scan_full_la_serena_grid() -> dict:
             "eta_impact": eta_formatted,
             "score_pct": score_pct,
             "semaforo": semaforo,
+            "forecast_1h": round(forecast_1h, 1),
+            "forecast_3h": round(forecast_3h, 1),
+            "forecast_6h": round(forecast_6h, 1),
+            "scs_curve_number": scs_cn,
+            "direct_runoff_Q": round(Q_runoff, 2),
             "coordinates": {"lat": info["lat"], "lon": info["lon"]}
         })
 

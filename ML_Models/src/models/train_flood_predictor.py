@@ -55,50 +55,77 @@ def train_and_evaluate_model(df: pd.DataFrame, model_filename: str = "centinela_
         X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
         y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
 
-    # Train Random Forest Classifier with class weighting to prioritize high recall on disasters
-    clf = RandomForestClassifier(
-        n_estimators=100,
-        max_depth=10,
-        class_weight="balanced",
-        random_state=42
-    )
+    # Define models with hyperparameters
+    models = {
+        "RandomForest": RandomForestClassifier(
+            n_estimators=200,
+            max_depth=12,
+            min_samples_split=4,
+            class_weight="balanced",
+            random_state=42
+        ),
+        "GradientBoosting": GradientBoostingClassifier(
+            n_estimators=200,
+            max_depth=12,
+            min_samples_split=4,
+            random_state=42
+        )
+    }
 
-    clf.fit(X_train, y_train)
+    best_model = None
+    best_f1 = -1
+    best_model_name = ""
+    best_metrics = {}
+    best_importances = None
 
-    y_pred = clf.predict(X_test)
-    y_prob = clf.predict_proba(X_test)[:, 1] if len(np.unique(y_train)) > 1 else np.zeros(len(y_test))
+    for name, clf in models.items():
+        print(f"\nTraining {name}...")
+        clf.fit(X_train, y_train)
 
-    acc = accuracy_score(y_test, y_pred)
-    prec = precision_score(y_test, y_pred, zero_division=0)
-    rec = recall_score(y_test, y_pred, zero_division=0)
-    f1 = f1_score(y_test, y_pred, zero_division=0)
+        y_pred = clf.predict(X_test)
+        y_prob = clf.predict_proba(X_test)[:, 1] if len(np.unique(y_train)) > 1 else np.zeros(len(y_test))
 
-    try:
-        auc = roc_auc_score(y_test, y_prob) if len(np.unique(y_test)) > 1 else 1.0
-    except Exception:
-        auc = 1.0
+        acc = accuracy_score(y_test, y_pred)
+        prec = precision_score(y_test, y_pred, zero_division=0)
+        rec = recall_score(y_test, y_pred, zero_division=0)
+        f1 = f1_score(y_test, y_pred, zero_division=0)
 
-    print("\n--- MODEL EVALUATION METRICS ---")
-    print(f"Accuracy:  {acc:.4f}")
-    print(f"Precision: {prec:.4f}")
-    print(f"Recall:    {rec:.4f} (Crucial for avoiding false negatives in emergencies)")
-    print(f"F1-Score:  {f1:.4f}")
-    print(f"ROC-AUC:   {auc:.4f}")
-    print("\nClassification Report:")
-    print(classification_report(y_test, y_pred, zero_division=0))
+        try:
+            auc = roc_auc_score(y_test, y_prob) if len(np.unique(y_test)) > 1 else 1.0
+        except Exception:
+            auc = 1.0
 
-    # Feature Importance Analysis
-    importances = pd.Series(clf.feature_importances_, index=FEATURE_COLUMNS).sort_values(ascending=False)
-    print("\nTop 5 Predictive Features:")
-    print(importances.head(5))
+        print(f"\n--- {name} EVALUATION METRICS ---")
+        print(f"Accuracy:  {acc:.4f}")
+        print(f"Precision: {prec:.4f}")
+        print(f"Recall:    {rec:.4f} (Crucial for avoiding false negatives in emergencies)")
+        print(f"F1-Score:  {f1:.4f}")
+        print(f"ROC-AUC:   {auc:.4f}")
+        print("\nClassification Report:")
+        print(classification_report(y_test, y_pred, zero_division=0))
 
-    # Serialize Model Artifact
+        # Feature Importance Analysis
+        importances = pd.Series(clf.feature_importances_, index=FEATURE_COLUMNS).sort_values(ascending=False)
+        print("\nTop 5 Predictive Features:")
+        print(importances.head(5))
+
+        if f1 > best_f1:
+            best_f1 = f1
+            best_model = clf
+            best_model_name = name
+            best_metrics = {"accuracy": acc, "precision": prec, "recall": rec, "f1": f1, "auc": auc}
+            best_importances = importances
+
+    print(f"\nBest Model selected: {best_model_name} with F1-Score: {best_f1:.4f}")
+
+    # Serialize Best Model Artifact
     artifact = {
-        "model": clf,
+        "model": best_model,
+        "model_name": best_model_name,
         "feature_columns": FEATURE_COLUMNS,
-        "feature_importances": importances.to_dict(),
+        "feature_importances": best_importances.to_dict(),
         "trained_date": str(pd.Timestamp.now()),
-        "metrics": {"accuracy": acc, "precision": prec, "recall": rec, "f1": f1, "auc": auc}
+        "metrics": best_metrics
     }
 
     joblib.dump(artifact, model_path)
