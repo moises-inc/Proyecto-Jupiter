@@ -76,14 +76,35 @@ function toggleEvacuationRoutes() {
   }
 }
 
-function toggleRadarLayer() {
+/* Punto 4: Capa de Radar Satelital de Precipitaciones en Vivo (RainViewer NRT API) */
+async function toggleRadarLayer() {
   isRadarActive = !isRadarActive;
   if (isRadarActive) {
     if (!radarLayer) {
-      radarLayer = L.tileLayer('https://tilecache.rainviewer.com/v2/radar/nowcast/256/{z}/{x}/{y}/2/1_1.png', {
-        opacity: 0.65,
-        attribution: '&copy; RainViewer Weather Radar NRT'
-      });
+      try {
+        const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+        const apiData = await res.json();
+        const host = apiData.host || 'https://tilecache.rainviewer.com';
+        const radarTimes = apiData.radar ? (apiData.radar.past || apiData.radar.nowcast) : [];
+        const latestPath = radarTimes.length > 0 ? radarTimes[radarTimes.length - 1].path : '/v2/radar/nowcast';
+        
+        const tileUrl = `${host}${latestPath}/256/{z}/{x}/{y}/2/1_1.png`;
+
+        radarLayer = L.tileLayer(tileUrl, {
+          opacity: 0.65,
+          maxNativeZoom: 12,
+          maxZoom: 19,
+          attribution: '&copy; RainViewer Weather Radar NRT'
+        });
+      } catch (err) {
+        console.warn('Usando URL fallback para radar RainViewer:', err);
+        radarLayer = L.tileLayer('https://tilecache.rainviewer.com/v2/radar/nowcast/256/{z}/{x}/{y}/2/1_1.png', {
+          opacity: 0.65,
+          maxNativeZoom: 12,
+          maxZoom: 19,
+          attribution: '&copy; RainViewer Weather Radar NRT'
+        });
+      }
     }
     radarLayer.addTo(map);
   } else {
