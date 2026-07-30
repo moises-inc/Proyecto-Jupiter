@@ -62,3 +62,6 @@ Si durante la lluvia de este viernes el Comandante de Incidentes o la municipali
 
 ## 🔗 Enlaces y Contexto
 🔗 [[10_Projects/Proyecto_Centinela/Docs/diseno_dashboard_puesto_mando|Diseño Dashboard Táctico]] | 🔗 [[10_Projects/Proyecto_Centinela/Docs/planificacion_modelo_ml_satelital|Planificación ML Satelital]] | 🔗 [[90_System/Agent_Sync/Active_Context|Contexto Activo]]
+
+
+[[10_Projects/Proyecto_Centinela/README.md]]

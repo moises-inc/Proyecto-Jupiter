@@ -8,3 +8,6 @@ Se incluye un panel de demostración para simular eventos de inundación con fin
 
 ## Bitácora de Incidentes SCI-201
 El sistema integra un generador automatizado de bitácoras SCI-201 (Incident Briefing o Resumen del Incidente). Esto asegura que se mantenga el estándar de informes del Sistema de Comando de Incidentes durante las emergencias, facilitando enormemente la coordinación táctica y el análisis posterior al evento.
+
+
+[[10_Projects/Proyecto_Centinela/README.md]]

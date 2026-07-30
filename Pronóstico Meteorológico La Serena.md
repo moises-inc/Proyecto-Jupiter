@@ -63,3 +63,5 @@ Paralelamente, resulta imprescindible reforzar la impermeabilización y la canal
 > 8. Nuevo frente traerá lluvias y viento al centro y sur del país: conoce aquí el pronóstico, [https://www.canal9.cl/episodios/2026/07/29/nuevo-sistema-frontal-trae-lluvias-y-el-viento-al-centro-y-sur-del-pais-revisa-aqui-el-pronostico](https://www.canal9.cl/episodios/2026/07/29/nuevo-sistema-frontal-trae-lluvias-y-el-viento-al-centro-y-sur-del-pais-revisa-aqui-el-pronostico)  
 > 9. El tiempo hoy en La Serena \- Meteored Chile, [https://www.meteored.cl/hoy/tiempo-en\_La+Serena-America+Sur-Chile-Coquimbo-SCSE-1-18575.html](https://www.meteored.cl/hoy/tiempo-en_La+Serena-America+Sur-Chile-Coquimbo-SCSE-1-18575.html)  
 > 10. Tiempo cada hora en La Serena, Coquimbo, Chile \- AccuWeather, [https://www.accuweather.com/es/cl/la-serena/53361/hourly-weather-forecast/53361](https://www.accuweather.com/es/cl/la-serena/53361/hourly-weather-forecast/53361)
+
+[[10_Projects/Proyecto_Centinela/README.md]]

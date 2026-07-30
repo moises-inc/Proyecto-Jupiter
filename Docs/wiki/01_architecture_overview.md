@@ -17,3 +17,6 @@ El Proyecto Júpiter está diseñado como un sistema modular de alerta temprana 
 - Vectores de Características -> Modelo ML -> Predicciones de Riesgo
 - Predicciones de Riesgo -> Escáner Espacial -> Alertas Zonales
 - Alertas Zonales -> Dashboard -> Interfaz de Usuario
+
+
+[[10_Projects/Proyecto_Centinela/README.md]]

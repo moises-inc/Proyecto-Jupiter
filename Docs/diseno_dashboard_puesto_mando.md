@@ -98,3 +98,6 @@ El dashboard se organiza en **4 bloques visuales principales**:
 
 ## 🔗 Enlaces y Contexto
 🔗 [[10_Projects/Proyecto_Centinela/Docs/planificacion_modelo_ml_satelital|Planificación ML Satelital]] | 🔗 [[10_Projects/Proyecto_Centinela/Docs/Proyecto_Centinela_OnePager|One-Pager Proyecto Centinela]] | 🔗 [[90_System/Agent_Sync/Active_Context|Contexto Activo]]
+
+
+[[10_Projects/Proyecto_Centinela/README.md]]

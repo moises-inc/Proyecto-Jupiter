@@ -8,3 +8,6 @@ Para cada sector, se calcula el Tiempo de Concentración (Tc). Este es el tiempo
 
 ## Recuperación y Calma (Clearance Recovery)
 El sistema modela la fase de recuperación y limpieza, prediciendo cuándo un área volverá a ser segura después de un evento de inundación. Esto contribuye directamente al cálculo de la "Hora de Paso Seguro / Calma" (ETA Clearance).
+
+
+[[10_Projects/Proyecto_Centinela/README.md]]

@@ -333,7 +333,7 @@ function renderLiveDashboard(data) {
         <div class="sector-name">${s.name}</div>
         <div class="sector-vulnerability"><strong>Peligro:</strong> ${s.disaster_type}</div>
         <div class="sector-vulnerability" style="color: var(--brand-blue); margin-top: 2px;">
-          <strong>Llegada del Pico:</strong> ${s.eta_impact} (Tiempo de Avance: ${s.concentration_time_hours} horas) • <strong style="color: #2ECC71;">Hora de Paso Seguro (Calma):</strong> ${s.eta_safe_return || '17:00 hrs'}
+          <strong>Punto Máximo de Impacto:</strong> ${s.eta_impact} (Tiempo de Avance: ${s.concentration_time_hours} horas) • <strong style="color: #2ECC71;">Hora de Paso Seguro (Calma):</strong> ${s.eta_safe_return || '17:00 hrs'}
         </div>
       </div>
       <span class="sector-badge ${badgeClass}">${s.semaforo} (${s.score_pct}%)</span>
@@ -401,7 +401,7 @@ function updateMapMarker(sector) {
       <hr style="margin: 4px 0; border: 0; border-top: 1px solid #ccc;">
       <b>Estado:</b> ${sector.semaforo}<br>
       <b>Riesgo ML:</b> ${sector.score_pct}%<br>
-      <b>Llegada del Pico Inundación:</b> ${sector.eta_impact} (Tiempo de Avance: ${sector.concentration_time_hours} horas)<br>
+      <b>Punto Máximo de Impacto:</b> ${sector.eta_impact} (Tiempo de Avance: ${sector.concentration_time_hours} horas)<br>
       <b style="color: #2E7D32;">Hora de Paso Seguro (Calma):</b> ${sector.eta_safe_return || '17:00 hrs'}<br>
       <b>Transitabilidad:</b> ${sector.transitability_status || 'TRANSITABLE'}<br>
       <b>Radio Cobertura:</b> ${sector.radius_m}m • <b>Cota:</b> ${sector.elevation_m} m.n.m.
@@ -440,7 +440,7 @@ function renderTacticalActions(data) {
       item.className = 'action-item danger';
       item.innerHTML = `
         <div class="action-title">ORDEN DE EVACUACIÓN Y ALERTA PREVENTIVA: ${s.name}</div>
-        <div class="action-desc">Riesgo ML al ${s.score_pct}%. Peligro: ${s.disaster_type}. Llegada del Pico: ${s.eta_impact}. Despachar cuadrillas de Bomberos inmediatamente.</div>
+        <div class="action-desc">Riesgo ML al ${s.score_pct}%. Peligro: ${s.disaster_type}. Punto Máximo de Impacto: ${s.eta_impact}. Despachar cuadrillas de Bomberos inmediatamente.</div>
       `;
       container.appendChild(item);
     });
@@ -452,7 +452,7 @@ function renderTacticalActions(data) {
       item.className = 'action-item warning';
       item.innerHTML = `
         <div class="action-title">PRE-POSICIONAR RECURSOS: ${s.name}</div>
-        <div class="action-desc">Riesgo en incremento (${s.score_pct}%). Peligro: ${s.disaster_type}. Llegada del Pico: ${s.eta_impact}. Monitorear cauces.</div>
+        <div class="action-desc">Riesgo en incremento (${s.score_pct}%). Peligro: ${s.disaster_type}. Punto Máximo de Impacto: ${s.eta_impact}. Monitorear cauces.</div>
       `;
       container.appendChild(item);
     });

@@ -95,3 +95,6 @@ El modelo cruza el volumen de agua proyectado con el **Modelo Digital de Elevaci
 
 ## 🔗 Enlaces y Contexto
 🔗 [[10_Projects/Proyecto_Centinela/Docs/planificacion_modelo_ml_satelital|Planificación ML Satelital]] | 🔗 [[10_Projects/Proyecto_Centinela/Docs/Investigación de Datos Satelitales en Tiempo Real|Investigación Satelital NRT]] | 🔗 [[90_System/Agent_Sync/Active_Context|Contexto Activo]]
+
+
+[[10_Projects/Proyecto_Centinela/README.md]]

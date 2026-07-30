@@ -17,3 +17,6 @@ El método del Número de Curva del Servicio de Conservación de Suelos (SCS-CN)
 
 ## Tiempo de Anticipación del Pronóstico (Lead Time Forecast)
 El sistema calcula los tiempos de anticipación de los pronósticos (+1h, +3h, +6h), permitiendo a las autoridades prepararse con antelación. Esto incluye predecir la **Llegada del Pico** (ETA Peak - tiempo estimado para la máxima inundación) y la **Hora de Paso Seguro / Calma** (ETA Clearance - cuando el agua retrocede y es seguro retornar).
+
+
+[[10_Projects/Proyecto_Centinela/README.md]]

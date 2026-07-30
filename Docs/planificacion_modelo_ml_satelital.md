@@ -111,3 +111,6 @@ ML_Models/
 
 ## 🔗 Enlaces y Contexto
 🔗 [[10_Projects/Proyecto_Centinela/Docs/Proyecto_Centinela_OnePager|One-Pager Proyecto Centinela]] | 🔗 [[10_Projects/Proyecto_Centinela/Docs/Estudio_Caso_La_Serena_Lluvias|Estudio Caso La Serena]] | 🔗 [[90_System/Agent_Sync/Active_Context|Contexto Activo]]
+
+
+[[10_Projects/Proyecto_Centinela/README.md]]

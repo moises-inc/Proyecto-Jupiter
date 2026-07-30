@@ -41,3 +41,12 @@ Para ejecutar las pruebas automatizadas (automated tests):
 ```bash
 pytest tests/ -v
 ```
+
+
+[[10_Projects/Proyecto_Centinela/README.md]]
+
+
+[[10_Projects/Proyecto_Centinela/Docs/wiki/01_architecture_overview.md]]
+
+
+[[10_Projects/Proyecto_Centinela/Pronóstico Meteorológico La Serena.md]]
