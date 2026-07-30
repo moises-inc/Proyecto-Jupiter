@@ -5,6 +5,8 @@ Serves NRT satellite telemetry, spatial grid scan predictions, and storm simulat
 
 import sys
 import os
+import pandas as pd
+import numpy as np
 from fastapi import FastAPI, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
