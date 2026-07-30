@@ -1,19 +1,19 @@
-# 01. Architecture Overview
+# 01. Visión General de la Arquitectura
 
-## Complete System Design
+## Diseño Completo del Sistema
 
-Proyecto Centinela is designed as a modular, real-time early warning system.
+El Proyecto Júpiter está diseñado como un sistema modular de alerta temprana en tiempo real.
 
-### Components
-1. **Data Ingestion**: Collects satellite and hydrometeorological data.
-2. **Feature Engineering**: Processes raw data into actionable features, utilizing hydrologic models like SCS-CN.
-3. **ML Classifier**: A Random Forest model that predicts flood risks based on engineered features.
-4. **Spatial Scanner**: Maps predictions across a 20-zone WGS84 grid.
-5. **Dashboard**: Presents data via Real-Time NRT console and a Demo simulation environment.
+### Componentes
+1. **Ingesta de Datos**: Recopila datos satelitales e hidrometeorológicos de diversas fuentes.
+2. **Ingeniería de Características**: Procesa los datos en crudo para convertirlos en características accionables (features), utilizando modelos hidrológicos como el SCS-CN.
+3. **Clasificador de Machine Learning**: Un modelo de Random Forest (Bosque Aleatorio) que predice los riesgos de inundación basándose en las características generadas.
+4. **Escáner Espacial**: Mapea las predicciones a través de una cuadrícula de 20 zonas con coordenadas WGS84.
+5. **Dashboard (Panel de Control)**: Presenta los datos a través de una consola en Tiempo Real (NRT - Near Real-Time) y un entorno de simulación (Demo).
 
-## Data Flows
-- Raw Data -> Ingestion Module -> Processed Data
-- Processed Data -> Feature Engineering -> Feature Vectors
-- Feature Vectors -> ML Model -> Risk Predictions
-- Risk Predictions -> Spatial Scanner -> Zonal Alerts
-- Zonal Alerts -> Dashboard -> User Interface
+## Flujos de Datos
+- Datos Crudos -> Módulo de Ingesta -> Datos Procesados
+- Datos Procesados -> Ingeniería de Características -> Vectores de Características
+- Vectores de Características -> Modelo ML -> Predicciones de Riesgo
+- Predicciones de Riesgo -> Escáner Espacial -> Alertas Zonales
+- Alertas Zonales -> Dashboard -> Interfaz de Usuario

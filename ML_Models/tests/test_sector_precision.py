@@ -1,5 +1,5 @@
 """
-Proyecto Centinela — PyTest Suite for Spatial Sector Precision & ML Accuracy
+Proyecto Júpiter — PyTest Suite for Spatial Sector Precision & ML Accuracy
 Verifies WGS84 coordinate accuracy, ML detection, and ETA impact calculation across all 20 sectors.
 """
 
@@ -44,12 +44,12 @@ def test_spatial_scan_data_integrity():
         assert "hrs" in sector["eta_impact"]
         
         # New Feature & Clearance Return validations
-        assert "direct_runoff_Q" in sector
+        assert "agua_acumulada_superficie" in sector
         assert "forecast_1h" in sector
         assert "scs_curve_number" in sector
         assert "eta_safe_return" in sector
         assert "transitability_status" in sector
-        assert isinstance(sector["direct_runoff_Q"], float)
+        assert isinstance(sector["agua_acumulada_superficie"], float)
         assert isinstance(sector["forecast_1h"], float)
         assert isinstance(sector["scs_curve_number"], int)
         assert "hrs" in sector["eta_safe_return"]

@@ -1,5 +1,5 @@
 """
-Proyecto Centinela - Spatial Grid Scanner Module (v5.0)
+Proyecto Júpiter - Spatial Grid Scanner Module (v5.0)
 Performs a 20-zone high-resolution geographic risk scan across 100% of La Serena footprint,
 calibrated with pinpoint WGS84 coordinates for Pueblo Islón and Lambert, SCS-CN hydrology,
 forecast lead-times (+1h/+3h/+6h), ETA of Impact, and ETA of Safe Return (Calma / Transitabilidad).
@@ -12,7 +12,7 @@ import numpy as np
 
 from src.ingesters.ingest_sat_data import fetch_live_nrt_data
 from src.features.feature_engineering import generate_hydrological_features, FEATURE_COLUMNS
-from src.inference.live_inference import load_centinela_model
+from src.inference.live_inference import load_jupiter_model
 
 
 # 20 High-Resolution Geographic Sectors with calibrated WGS84, SCS-CN, and Clearance Recovery times
@@ -265,7 +265,7 @@ def calculate_scs_direct_runoff(precip_mm: float, cn: float) -> float:
 def scan_full_la_serena_grid() -> dict:
     raw_df = fetch_live_nrt_data()
     features_df = generate_hydrological_features(raw_df)
-    model, feature_cols = load_centinela_model()
+    model, feature_cols = load_jupiter_model()
 
     current_row = get_current_nrt_row(features_df)
     X_current = pd.DataFrame([current_row[feature_cols]])

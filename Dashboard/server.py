@@ -1,5 +1,5 @@
 """
-Proyecto Centinela - Command Post Dashboard Backend (FastAPI)
+Proyecto Júpiter - Command Post Dashboard Backend (FastAPI)
 Serves NRT satellite telemetry, spatial grid scan predictions, and storm simulation endpoints.
 """
 
@@ -22,11 +22,11 @@ from src.inference.spatial_scanner import scan_full_la_serena_grid, LA_SERENA_SE
 from src.inference.live_inference import run_live_inference
 from src.ingesters.ingest_sat_data import generate_offline_fallback_data
 from src.features.feature_engineering import generate_hydrological_features
-from src.inference.live_inference import load_centinela_model, evaluate_sector_tactical_risks
+from src.inference.live_inference import load_jupiter_model, evaluate_sector_tactical_risks
 
 
 app = FastAPI(
-    title="Proyecto Centinela - Dashboard Táctico Puesto de Mando",
+    title="Proyecto Júpiter - Dashboard Táctico Puesto de Mando",
     description="API y Servidor Local de Conciencia Situacional para Bomberos y SCI (La Serena)",
     version="1.0.0"
 )
@@ -64,7 +64,7 @@ def sync_nrt_satellite_data():
     Background worker function that executes every 300 seconds (5 minutes)
     to fetch fresh NRT satellite telemetry and recalculate spatial scan predictions.
     """
-    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 📡 Ejecucción de Ingesta Satelital NRT (Frecuencia: Cada 5 Minutos)...")
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 📡 Ejecución de Ingesta Satelital NRT (Frecuencia: Cada 5 Minutos)...")
     try:
         scan = scan_full_la_serena_grid()
         hours = [f"{h:02d}:00" for h in range(0, 25, 4)]
@@ -262,6 +262,6 @@ def serve_demo_dashboard():
 
 if __name__ == "__main__":
     import uvicorn
-    print("Iniciando Servidor Local del Dashboard Táctico (Proyecto Centinela)...")
+    print("Iniciando Servidor Local del Dashboard Táctico (Proyecto Júpiter)...")
     print("Accede en tu navegador a: http://localhost:8000")
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,5 +1,5 @@
 """
-Proyecto Centinela - Advanced Model Stress Testing Module
+Proyecto Júpiter - Advanced Model Stress Testing Module
 Performs sensitivity analysis (What-If scenarios), fault tolerance, and performance profiling.
 """
 
@@ -9,7 +9,7 @@ import numpy as np
 
 from src.ingesters.ingest_sat_data import generate_offline_fallback_data
 from src.features.feature_engineering import generate_hydrological_features, FEATURE_COLUMNS
-from src.inference.live_inference import load_centinela_model, evaluate_sector_tactical_risks
+from src.inference.live_inference import load_jupiter_model, evaluate_sector_tactical_risks
 
 
 def run_sensitivity_analysis():
@@ -26,7 +26,7 @@ def run_sensitivity_analysis():
 
     base_df = generate_offline_fallback_data("2026-07-20", "2026-07-21")
     feat_df = generate_hydrological_features(base_df)
-    model, cols = load_centinela_model()
+    model, cols = load_jupiter_model()
 
     base_row = feat_df.iloc[-1].copy()
 
@@ -86,7 +86,7 @@ def run_fault_tolerance_test():
 
     try:
         feat_df = generate_hydrological_features(base_df)
-        model, cols = load_centinela_model()
+        model, cols = load_jupiter_model()
         X = pd.DataFrame([feat_df.iloc[-1][cols]])
         pred = model.predict(X)
         print(" SUCCESS: El pipeline procesó datos corruptos/NaNs sin colapsar.")
@@ -107,7 +107,7 @@ def run_latency_profiling():
 
     base_df = generate_offline_fallback_data("2026-07-20", "2026-07-21")
     feat_df = generate_hydrological_features(base_df)
-    model, cols = load_centinela_model()
+    model, cols = load_jupiter_model()
     X = pd.DataFrame([feat_df.iloc[-1][cols]])
 
     start_time = time.time()

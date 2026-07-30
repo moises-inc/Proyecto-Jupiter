@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Proyecto Centinela — Consola de Demostración & Simulación (demo.js v4.0)
+   Proyecto Júpiter — Consola de Demostración & Simulación (demo.js v4.0)
    ========================================================================== */
 
 let map;

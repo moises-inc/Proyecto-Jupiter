@@ -1,10 +1,10 @@
-# 04. Dashboard and SCI-201
+# 04. Dashboard y Reportes SCI-201
 
-## Real-time NRT Console
-The Near Real-Time (NRT) console is the primary interface for active monitoring. It displays live data feeds, current risk levels across the 20 sectors, and active alerts.
+## Consola en Tiempo Real (NRT)
+La consola de Tiempo Casi Real (Near Real-Time o NRT) es la interfaz principal para el monitoreo activo. Muestra flujos de datos en vivo, niveles de riesgo actuales en los 20 sectores de la cuadrícula y las alertas activas en curso.
 
-## Demo Simulation
-A demo dashboard is available to simulate flood events for training and demonstration purposes. It uses historical or fabricated data to demonstrate system capabilities without waiting for an actual event.
+## Simulación de Demostración (Demo)
+Se incluye un panel de demostración para simular eventos de inundación con fines de capacitación, entrenamiento y presentación. Utiliza datos históricos o fabricados para demostrar las capacidades del sistema sin tener que esperar a que ocurra un evento meteorológico real.
 
-## SCI-201 Incident Log
-The system integrates an automated SCI-201 (Incident Briefing) log generator. This ensures standard incident command system reporting is maintained during events, aiding in coordination and post-event analysis.
+## Bitácora de Incidentes SCI-201
+El sistema integra un generador automatizado de bitácoras SCI-201 (Incident Briefing o Resumen del Incidente). Esto asegura que se mantenga el estándar de informes del Sistema de Comando de Incidentes durante las emergencias, facilitando enormemente la coordinación táctica y el análisis posterior al evento.

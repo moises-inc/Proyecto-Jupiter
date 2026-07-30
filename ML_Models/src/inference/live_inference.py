@@ -1,5 +1,5 @@
 """
-Proyecto Centinela - Live NRT Inference Module
+Proyecto Júpiter - Live NRT Inference Module
 Executes real-time predictions for La Serena Command Post & Firefighters.
 """
 
@@ -15,11 +15,11 @@ from src.features.feature_engineering import generate_hydrological_features, FEA
 MODEL_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
     "trained_models",
-    "centinela_sat_v1.joblib"
+    "jupiter_sat_v1.joblib"
 )
 
 
-def load_centinela_model(path: str = MODEL_PATH):
+def load_jupiter_model(path: str = MODEL_PATH):
     """
     Loads serialized ML model artifact.
     """
@@ -109,7 +109,7 @@ def run_live_inference() -> dict:
     raw_df = fetch_live_nrt_data()
     features_df = generate_hydrological_features(raw_df)
 
-    model, feature_cols = load_centinela_model()
+    model, feature_cols = load_jupiter_model()
 
     # Get latest timestamp row
     latest_row = features_df.iloc[-1]
@@ -153,7 +153,7 @@ def print_formatted_bulletin(bulletin: dict):
     Prints a clean, human-readable emergency bulletin for command post operators.
     """
     print("\n" + "=" * 65)
-    print(" 📡 PROYECTO CENTINELA — BOLETÍN TÁCTICO DE EMERGENCIAS (LA SERENA)")
+    print(" 📡 PROYECTO JÚPITER — BOLETÍN TÁCTICO DE EMERGENCIAS (LA SERENA)")
     print("=" * 65)
     print(f" Timestamp: {bulletin['timestamp']}")
     print(f" Estado General: {bulletin['tactic']['general_semaforo']}")

@@ -1,19 +1,19 @@
-# 02. ML Model and Hydrology
+# 02. Modelo de Machine Learning e Hidrología
 
-## Random Forest Model
-The core predictive engine is a Random Forest classifier. This ensemble method provides high accuracy and handles non-linear relationships well, which is crucial for complex meteorological data.
+## Modelo de Random Forest (Bosque Aleatorio)
+El motor predictivo central es un clasificador de Random Forest. Este método de ensamble proporciona una alta precisión y maneja de forma excelente las relaciones no lineales, lo cual es crucial para los datos meteorológicos complejos.
 
-## Feature Engineering
-Features are derived from raw hydrometeorological data. Key engineered features include:
-- Rainfall intensity (mm/hr)
-- Cumulative rainfall
-- Soil moisture index
+## Ingeniería de Características (Feature Engineering)
+Las características se derivan de los datos hidrometeorológicos crudos. Las características generadas más importantes incluyen:
+- Intensidad de la lluvia (mm/h)
+- Precipitación acumulada
+- Índice de humedad del suelo
 
-## SCS Curve Number Hydrology
-The Soil Conservation Service Curve Number (SCS-CN) method is used to estimate direct runoff from rainfall events. It takes into account:
-- Soil type
-- Land use
-- Hydrologic condition
+## Hidrología de Número de Curva (SCS-CN)
+El método del Número de Curva del Servicio de Conservación de Suelos (SCS-CN) se utiliza para estimar la escorrentía directa de los eventos de precipitación. Tiene en cuenta:
+- Tipo de suelo
+- Uso de la tierra
+- Condición hidrológica
 
-## Forecast Lead Time
-The system calculates forecast lead times, allowing authorities to prepare. This includes predicting the ETA of the flood peak and the ETA of safe return (Calma) when waters recede to safe levels.
+## Tiempo de Anticipación del Pronóstico (Lead Time Forecast)
+El sistema calcula los tiempos de anticipación de los pronósticos (+1h, +3h, +6h), permitiendo a las autoridades prepararse con antelación. Esto incluye predecir la **Llegada del Pico** (ETA Peak - tiempo estimado para la máxima inundación) y la **Hora de Paso Seguro / Calma** (ETA Clearance - cuando el agua retrocede y es seguro retornar).

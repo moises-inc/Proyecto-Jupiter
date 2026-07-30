@@ -1,5 +1,5 @@
 """
-Proyecto Centinela - Pipeline Unit and Integration Tests
+Proyecto Júpiter - Pipeline Unit and Integration Tests
 Tests data ingestion, feature engineering, model training, and live inference.
 """
 
@@ -15,7 +15,7 @@ from src.features.feature_engineering import (
     FEATURE_COLUMNS
 )
 from src.models.train_flood_predictor import train_and_evaluate_model, MODEL_DIR
-from src.inference.live_inference import run_live_inference, load_centinela_model
+from src.inference.live_inference import run_live_inference, load_jupiter_model
 
 
 def test_data_ingestion():
@@ -54,7 +54,7 @@ def test_model_training_and_serialization():
     raw_df = generate_offline_fallback_data("2025-05-01", "2026-07-25")
     features_df = generate_hydrological_features(raw_df)
 
-    test_model_filename = "test_centinela_model.joblib"
+    test_model_filename = "test_jupiter_model.joblib"
     artifact = train_and_evaluate_model(features_df, model_filename=test_model_filename)
 
     test_model_path = os.path.join(MODEL_DIR, test_model_filename)
@@ -67,7 +67,7 @@ def test_live_inference_end_to_end():
     # Ensure default model is trained
     raw_df = generate_offline_fallback_data("2025-05-01", "2026-07-25")
     features_df = generate_hydrological_features(raw_df)
-    train_and_evaluate_model(features_df, model_filename="centinela_sat_v1.joblib")
+    train_and_evaluate_model(features_df, model_filename="jupiter_sat_v1.joblib")
 
     bulletin = run_live_inference()
 

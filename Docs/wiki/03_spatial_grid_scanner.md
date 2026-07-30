@@ -1,10 +1,10 @@
-# 03. Spatial Grid Scanner
+# 03. Escáner de Cuadrícula Espacial
 
-## 20-Zone WGS84 Sector Grid
-The monitored area (La Serena, Chile) is divided into 20 distinct sectors using WGS84 coordinates. This granular approach allows for highly localized warnings.
+## Cuadrícula de 20 Sectores WGS84
+El área monitoreada (La Serena, Chile) se divide en 20 sectores distintos utilizando coordenadas WGS84. Este enfoque granular y detallado permite emitir advertencias de riesgo altamente localizadas.
 
-## Concentration Times
-For each sector, the Time of Concentration (Tc) is calculated. This is the time required for runoff to travel from the most hydraulically remote point of the watershed to the point of interest (the sector).
+## Tiempos de Concentración
+Para cada sector, se calcula el Tiempo de Concentración (Tc). Este es el tiempo requerido para que la escorrentía viaje desde el punto hidráulicamente más distante de la cuenca hasta el punto de interés (el sector en cuestión).
 
-## Clearance Recovery
-The system models the clearance recovery phase, predicting when an area will be safe after a flood event, contributing to the "ETA of Safe Return".
+## Recuperación y Calma (Clearance Recovery)
+El sistema modela la fase de recuperación y limpieza, prediciendo cuándo un área volverá a ser segura después de un evento de inundación. Esto contribuye directamente al cálculo de la "Hora de Paso Seguro / Calma" (ETA Clearance).

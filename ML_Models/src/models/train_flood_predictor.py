@@ -1,5 +1,5 @@
 """
-Proyecto Centinela - Model Training Module
+Proyecto Júpiter - Model Training Module
 Trains, evaluates, and serializes the Machine Learning flood prediction model.
 """
 
@@ -28,7 +28,7 @@ def build_training_dataset(start_date: str = "2025-05-01", end_date: str = "2026
     return features_df
 
 
-def train_and_evaluate_model(df: pd.DataFrame, model_filename: str = "centinela_sat_v1.joblib") -> dict:
+def train_and_evaluate_model(df: pd.DataFrame, model_filename: str = "jupiter_sat_v1.joblib") -> dict:
     """
     Trains RandomForest/GradientBoosting model, evaluates metrics, and serializes artifacts.
     """

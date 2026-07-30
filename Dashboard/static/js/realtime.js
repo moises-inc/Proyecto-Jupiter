@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Proyecto Centinela — Dashboard Operacional En Vivo NRT (realtime.js v4.0)
+   Proyecto Júpiter — Dashboard Operacional En Vivo NRT (realtime.js v4.0)
    ========================================================================== */
 
 let map;

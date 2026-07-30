@@ -1,16 +1,16 @@
 ---
 id: 20260730-guia-operativa-prueba-viernes
-title: Guía de Operación para la Prueba en Vivo de este Viernes — Proyecto Centinela
-proyecto: Proyecto_Centinela
+title: Guía de Operación para la Prueba en Vivo de este Viernes — Proyecto Júpiter
+proyecto: Proyecto_Jupiter
 fecha: 2026-07-30
 type: operational-guide
 status: listo
-tags: [centinela, prueba-en-vivo, lluvias-viernes, la-serena, puesto-de-mando, bomberos]
+tags: [jupiter, prueba-en-vivo, lluvias-viernes, la-serena, puesto-de-mando, bomberos]
 ---
 
 # 🌧️ Guía de Operación: Prueba en Vivo durante el Evento de Lluvias de este Viernes
 
-Este documento establece la **Guía Operativa de Terreno** para poner a prueba el primer prototipo funcional del **Proyecto Centinela** durante el frente de precipitaciones pronosticado para este **Viernes en La Serena y la Región de Coquimbo**.
+Este documento establece la **Guía Operativa de Terreno** para poner a prueba el primer prototipo funcional del **Proyecto Júpiter** durante el frente de precipitaciones pronosticado para este **Viernes en La Serena y la Región de Coquimbo**.
 
 ---
 
@@ -48,7 +48,7 @@ graph TD
 | Hora de Evaluación | Qué Observar en el Dashboard | Qué Verificar en Terreno con Bomberos |
 | :---: | :--- | :--- |
 | **08:00 AM (Inicio Frente)** | Confirmar que la tasa de refresco muestra `SISTEMA EN VIVO NRT (DESCARGA: CADA 5 MIN)`. | Comparar la tasa de lluvia $mm/h$ del Dashboard con las observaciones visuales del cielo y reportes radiales. |
-| **12:00 PM (Pico Lluvia)** | Revisar si la Isoterma Cero sube de los $3.000 \text{ m.n.m.}$ y si el sector **Pueblo Islón / Quebrada Santa Gracia** pasa a `AMARILLO` o `ROJO`. | Consultar con Bomberos si hay aumento de caudal en el Río Elqui o quebradas. |
+| **12:00 PM (Pico Lluvia)** | Revisar si la Isoterma Cero sube de los $3.000 	ext{ m.n.m.}$ y si el sector **Pueblo Islón / Quebrada Santa Gracia** pasa a `AMARILLO` o `ROJO`. | Consultar con Bomberos si hay aumento de caudal en el Río Elqui o quebradas. |
 | **16:00 PM (Acumulado 24h)** | Verificar el Semáforo de **Pasos Bajo Nivel en Ruta 5 Km 490-500** y **Las Compañías**. | Confirmar anegamientos viales reportados en redes/radios contra la predicción del Dashboard. |
 
 ---
