@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Proyecto Centinela — Consola de Demostración & Simulación (demo.js v3.0)
+   Proyecto Centinela — Consola de Demostración & Simulación (demo.js v4.0)
    ========================================================================== */
 
 let map;
@@ -9,7 +9,7 @@ let currentScenario = 'normal';
 let isInitialBoundsSet = false;
 
 // Layer Toggles & Audio State
-let radarLayer = null;
+let radarLayerGroup = null;
 let isRadarActive = false;
 let evacuationGroup = null;
 let isEvacuationActive = false;
@@ -17,7 +17,7 @@ let isAudioAlarmEnabled = false;
 let audioCtx = null;
 
 let sciLogEntries = [
-  { timestamp: "18:00 hrs", sector: "Pueblo Islón", user: "Demo Operador", desc: "Simulación iniciada. Monitoreo de cuenca en precordillera." }
+  { timestamp: "18:00 hrs", sector: "Pueblo Islón / Quebrada Santa Gracia", user: "Demo Operador", severity: "Moderado", desc: "Simulación de escenario de temporal iniciada. Cuenca alta monitorizada." }
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -76,39 +76,69 @@ function toggleEvacuationRoutes() {
   }
 }
 
-/* Punto 4: Capa de Radar Satelital de Precipitaciones en Vivo (RainViewer NRT API) */
 async function toggleRadarLayer() {
   isRadarActive = !isRadarActive;
+
   if (isRadarActive) {
-    if (!radarLayer) {
+    if (!radarLayerGroup) {
+      radarLayerGroup = L.layerGroup();
+      
       try {
         const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
         const apiData = await res.json();
         const host = apiData.host || 'https://tilecache.rainviewer.com';
         const radarTimes = apiData.radar ? (apiData.radar.past || apiData.radar.nowcast) : [];
         const latestPath = radarTimes.length > 0 ? radarTimes[radarTimes.length - 1].path : '/v2/radar/nowcast';
-        
         const tileUrl = `${host}${latestPath}/256/{z}/{x}/{y}/2/1_1.png`;
 
-        radarLayer = L.tileLayer(tileUrl, {
+        const tileLayer = L.tileLayer(tileUrl, {
           opacity: 0.65,
           maxNativeZoom: 12,
           maxZoom: 19,
           attribution: '&copy; RainViewer Weather Radar NRT'
         });
-      } catch (err) {
-        console.warn('Usando URL fallback para radar RainViewer:', err);
-        radarLayer = L.tileLayer('https://tilecache.rainviewer.com/v2/radar/nowcast/256/{z}/{x}/{y}/2/1_1.png', {
-          opacity: 0.65,
-          maxNativeZoom: 12,
-          maxZoom: 19,
-          attribution: '&copy; RainViewer Weather Radar NRT'
-        });
+        radarLayerGroup.addLayer(tileLayer);
+      } catch (e) {
+        console.warn('Fallback dynamic radar layer active');
       }
+
+      Object.keys(sectorMarkers).forEach(key => {
+        const s = sectorMarkers[key];
+        const radarPulse = L.circle(s.coords, {
+          radius: (s.radius_m || 1000) * 1.4,
+          color: 'rgba(0, 210, 255, 0.4)',
+          weight: 2,
+          fillColor: 'rgba(0, 210, 255, 0.12)',
+          fillOpacity: 0.25,
+          dashArray: '3, 6'
+        });
+        radarLayerGroup.addLayer(radarPulse);
+      });
     }
-    radarLayer.addTo(map);
+
+    radarLayerGroup.addTo(map);
+
+    let legend = document.getElementById('radar-legend-badge');
+    if (!legend) {
+      legend = document.createElement('div');
+      legend.id = 'radar-legend-badge';
+      legend.className = 'radar-legend';
+      legend.innerHTML = `
+        <span style="font-weight: 700; color: #00D2FF;">📡 Radar Reflectividad NRT:</span>
+        <div style="display:flex; align-items:center; gap:3px; font-size:0.7rem;">
+          <span style="background:#0288D1; padding:2px 5px; border-radius:3px;">10 dBZ (Llovizna)</span>
+          <span style="background:#FBC02D; color:#000; padding:2px 5px; border-radius:3px;">35 dBZ (Moderada)</span>
+          <span style="background:#D32F2F; padding:2px 5px; border-radius:3px;">>50 dBZ (Fuerte)</span>
+        </div>
+      `;
+      document.getElementById('map').appendChild(legend);
+    }
+    legend.style.display = 'flex';
+
   } else {
-    if (radarLayer) map.removeLayer(radarLayer);
+    if (radarLayerGroup) map.removeLayer(radarLayerGroup);
+    const legend = document.getElementById('radar-legend-badge');
+    if (legend) legend.style.display = 'none';
   }
 }
 
@@ -140,13 +170,14 @@ function playEmergencyChime() {
     osc.start();
     osc.stop(audioCtx.currentTime + 0.3);
   } catch (e) {
-    console.error('Web Audio API no soportado:', e);
+    console.error('AudioContext error:', e);
   }
 }
 
 function addSciLogEntry() {
   const sectorInput = document.getElementById('log-sector-input');
   const userInput = document.getElementById('log-user-input');
+  const severityInput = document.getElementById('log-severity-input');
   const descInput = document.getElementById('log-desc-input');
 
   if (!descInput.value.trim()) return;
@@ -158,6 +189,7 @@ function addSciLogEntry() {
     timestamp: timeStr,
     sector: sectorInput.value.trim() || 'General La Serena',
     user: userInput.value.trim() || 'Demo Operador',
+    severity: severityInput.value.trim() || 'Informativo',
     desc: descInput.value.trim()
   });
 
@@ -165,25 +197,48 @@ function addSciLogEntry() {
   renderSciLogList();
 }
 
+function clearSciLogs() {
+  if (confirm('¿Deseas limpiar todos los registros de la Bitácora Táctica SCI?')) {
+    sciLogEntries = [];
+    renderSciLogList();
+  }
+}
+
 function renderSciLogList() {
   const list = document.getElementById('sci-log-list');
   if (!list) return;
   list.innerHTML = '';
 
+  if (sciLogEntries.length === 0) {
+    list.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;">No hay observaciones registradas en la Bitácora Táctica.</div>`;
+    return;
+  }
+
   sciLogEntries.forEach(item => {
     const card = document.createElement('div');
-    card.style.background = 'rgba(13,22,41,0.9)';
-    card.style.borderLeft = '3px solid var(--brand-blue)';
-    card.style.padding = '0.4rem 0.6rem';
-    card.style.borderRadius = '4px';
-    card.style.fontSize = '0.75rem';
+    card.style.background = 'rgba(13, 22, 41, 0.9)';
+    card.style.border = '1px solid var(--card-border)';
+    card.style.borderLeft = '4px solid var(--brand-blue)';
+    card.style.padding = '0.75rem 1rem';
+    card.style.borderRadius = '8px';
+    card.style.fontSize = '0.85rem';
+
+    if (item.severity.toLowerCase().includes('crítico') || item.severity.toLowerCase().includes('rojo') || item.severity.toLowerCase().includes('evacuación')) {
+      card.style.borderLeftColor = 'var(--status-red)';
+      card.style.background = 'rgba(231, 76, 60, 0.08)';
+    } else if (item.severity.toLowerCase().includes('moderado') || item.severity.toLowerCase().includes('amarillo')) {
+      card.style.borderLeftColor = 'var(--status-yellow)';
+    }
 
     card.innerHTML = `
-      <div style="display:flex; justify-between; align-items:center; color: var(--text-secondary); margin-bottom: 2px;">
-        <strong>[${item.sector}]</strong>
-        <span style="font-family: var(--font-mono); color: var(--brand-blue);">${item.timestamp} • ${item.user}</span>
+      <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 0.35rem; font-size: 0.8rem;">
+        <span style="font-weight: 700; color: #FFFFFF;">📍 ${item.sector}</span>
+        <div style="display:flex; gap: 0.75rem; align-items:center;">
+          <span style="background: rgba(0, 210, 255, 0.15); color: var(--brand-blue); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 600;">${item.severity}</span>
+          <span style="font-family: var(--font-mono); color: var(--text-secondary);">${item.timestamp} • ${item.user}</span>
+        </div>
       </div>
-      <div style="color: var(--text-primary);">${item.desc}</div>
+      <div style="color: var(--text-primary); line-height: 1.4; font-size: 0.88rem;">${item.desc}</div>
     `;
     list.appendChild(card);
   });
@@ -391,7 +446,7 @@ function updateMapMarker(sector) {
   coverageZone.bindPopup(popupContent);
   centerMarker.bindPopup(popupContent);
 
-  sectorMarkers[sector.key] = { circle: coverageZone, marker: centerMarker, coords: coords };
+  sectorMarkers[sector.key] = { circle: coverageZone, marker: centerMarker, coords: coords, radius_m: sector.radius_m };
   return sectorMarkers[sector.key];
 }
 
