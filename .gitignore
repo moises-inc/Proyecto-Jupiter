@@ -1,8 +1,20 @@
-.DS_Store
-*.pyc
+# Python & Virtual Environments
 __pycache__/
+*.py[cod]
+*$py.class
 .pytest_cache/
-.env
-.idea/
-.vscode/
 *.log
+
+# LaTeX Build Auxiliary Files (Only track .tex and .pdf)
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Operating System & IDE
+.DS_Store
+.vscode/
+.idea/

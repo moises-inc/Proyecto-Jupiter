@@ -47,6 +47,8 @@ Las crecidas repentinas en quebradas precordilleranas (como Pueblo Islón, Lambe
     \item Saturación previa del suelo, la cual elimina la capacidad de infiltración del terreno.
 \end{enumerate}
 
+\newpage
+
 \section{Arquitectura del Sistema}
 
 El sistema opera bajo un flujo continuo divido en tres capas fundamentales. A diferencia de los pronósticos generales que evalúan a toda la Región de Coquimbo como un único bloque, Proyecto Júpiter divide a La Serena en 20 micro-zonas geográficas independientes con coordenadas WGS84 de alta precisión, tales como Pueblo Islón ($-29.878^\circ, -71.218^\circ$) y Lambert ($-29.818^\circ, -71.148^\circ$).
@@ -97,6 +99,8 @@ El núcleo predictivo se basa en un modelo de \textit{Random Forest Classifier} 
     Donde $CN$ representa la impermeabilidad del suelo ($CN=88$ en cerros y $CN=90$ en zonas urbanas).
     \item \textbf{Pronósticos de Anticipación ($+1\text{h}, +3\text{h}, +6\text{h}$):} Vectores meteorológicos proyectados que permiten evaluar el riesgo horas antes de que la lluvia caiga físicamente.
 \end{enumerate}
+
+\newpage
 
 \section{Simulación Operativa: Evento del Viernes 31 de Julio}
 
