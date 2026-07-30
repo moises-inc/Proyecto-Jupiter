@@ -99,12 +99,12 @@ El núcleo predictivo se basa en un modelo de \textit{Random Forest Classifier} 
         S = \frac{25400}{CN} - 254, \quad Q = \frac{(P - 0.2S)^2}{P + 0.8S}
     \end{equation}
     Donde $CN$ representa la impermeabilidad del suelo ($CN=88$ en cerros y $CN=90$ en zonas urbanas).
-\item 	extbf{Pronósticos de Anticipación extendida ($+1\text{h}, +3\text{h}, +6\text{h}, +12\text{h}$):} Vectores meteorológicos proyectados que permiten evaluar el riesgo horas antes de que la lluvia caiga físicamente.
-    \item 	extbf{Nowcasting Radar (Tasa de Lluvia):} Transformación de reflectividad radar (dBZ) en tasa instantánea de precipitación mediante relación Marshall-Palmer para estimación a muy corto plazo.
-    \item 	extbf{Factor de Seguridad Geotécnico (FS):} Cálculo analítico de estabilidad de laderas integrando el modelo de talud infinito, dependiente de la saturación antecedente del terreno.
-    \item 	extbf{Enrutamiento Hidrológico (Muskingum-Cunge):} Modelo de propagación de onda cinemática para estimar el caudal y tiempo de viaje del flujo a través de las 35 micro-zonas interconectadas.
-    \item 	extbf{Restricciones Físicas Informadas (PINNs):} Penalización de red neuronal acoplada a las ecuaciones de Saint-Venant (conservación de masa), asegurando coherencia física estricta en el pronóstico.
-    \item 	extbf{Asimilación de Datos Dinámica (EnKF):} Filtro de Kalman por ensambles que actualiza probabilísticamente el riesgo en tiempo real utilizando datos telemétricos de sensores y estaciones en tierra.
+    \item \textbf{Pronósticos de Anticipación extendida ($+1\text{h}, +3\text{h}, +6\text{h}, +12\text{h}$):} Vectores meteorológicos proyectados que permiten evaluar el riesgo horas antes de que la lluvia caiga físicamente.
+    \item \textbf{Nowcasting Radar (Tasa de Lluvia):} Transformación de reflectividad radar (dBZ) en tasa instantánea de precipitación mediante relación Marshall-Palmer para estimación a muy corto plazo.
+    \item \textbf{Factor de Seguridad Geotécnico (FS):} Cálculo analítico de estabilidad de laderas integrando el modelo de talud infinito, dependiente de la saturación antecedente del terreno.
+    \item \textbf{Enrutamiento Hidrológico (Muskingum-Cunge):} Modelo de propagación de onda cinemática para estimar el caudal y tiempo de viaje del flujo a través de las 35 micro-zonas interconectadas.
+    \item \textbf{Restricciones Físicas Informadas (PINNs):} Penalización de red neuronal acoplada a las ecuaciones de Saint-Venant (conservación de masa), asegurando coherencia física estricta en el pronóstico.
+    \item \textbf{Asimilación de Datos Dinámica (EnKF):} Filtro de Kalman por ensambles que actualiza probabilísticamente el riesgo en tiempo real utilizando datos telemétricos de sensores y estaciones en tierra.
 \end{enumerate}
 
 \newpage
