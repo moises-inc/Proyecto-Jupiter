@@ -1,0 +1,138 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=black,
+    urlcolor=black
+}
+
+\title{\textbf{Proyecto Júpiter: Sistema de Alerta Temprana e Inteligencia Hidrometeorológica para La Serena}\\
+\large Informe Técnico de Funcionamiento y Simulación Operativa}
+\author{\textbf{Moisés Amundarain}\\
+Investigador Principal --- Proyecto Júpiter}
+\date{30 de julio de 2026}
+
+\begin{document}
+\spanishdeactivate{><}
+
+\maketitle
+
+\begin{abstract}
+El presente documento describe la arquitectura, el fundamento hidrológico y el funcionamiento operativo del \textbf{Proyecto Júpiter}, una plataforma predictiva de alerta temprana ante inundaciones y aluviones en la comuna de La Serena. El sistema integra telemetría satelital en tiempo casi real (NRT), un modelo de aprendizaje automático (\textit{Random Forest}) calibrado con física de suelos (método SCS-CN) y un escáner de 20 micro-zonas geográficas calibradas en coordenadas WGS84. Asimismo, se expone la simulación operativa para el evento meteorológico del viernes 31 de julio, detallando el cálculo anticipado de los picos de precipitación y la determinación de las ventanas de calma y retorno seguro.
+\end{abstract}
+
+\section{Introducción y Contexto}
+
+El \textbf{Proyecto Júpiter} recibe su nombre en homenaje a \textit{Júpiter Pluvio}, deidad de la mitología romana asociada a las nubes y las lluvias propiciadoras de vida. La plataforma nace para resolver una vulnerabilidad histórica en la comuna de La Serena: la falta de sistemas de alerta con alta resolución espacial y capacidad de anticipación temporal.
+
+Las crecidas repentinas en quebradas precordilleranas (como Pueblo Islón, Lambert y Las Rojas) y los colapsos de colectores pluviales en la zona urbana ocurren debido a la interacción entre tres factores principales:
+\begin{enumerate}
+    \item Precipitación intensa acumulada en breves periodos.
+    \item Límite de nieve (isoterma cero) elevado en la cordillera, que impide la acumulación de nieve y transforma la precipitación en agua líquida sobre la roca.
+    \item Saturación previa del suelo, la cual elimina la capacidad de infiltración del terreno.
+\end{enumerate}
+
+\section{Arquitectura del Sistema}
+
+El sistema opera bajo un flujo continuo divido en tres capas fundamentales, ilustradas en la Figura~\ref{fig:arquitectura}.
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[node distance=1.5cm, auto, >=Stealth]
+    \node [draw, rectangle, rounded corners, text width=3.0cm, align=center] (ingesta) {\textbf{1. Ingesta Satelital}\\Datos meteorológicos NRT cada 5 min};
+    \node [draw, rectangle, rounded corners, right=0.8cm of ingesta, text width=3.2cm, align=center] (features) {\textbf{2. Ingeniería Datos}\\Humedad suelo ($API$)\\Infiltración (SCS-CN)};
+    \node [draw, rectangle, rounded corners, right=0.8cm of features, text width=3.2cm, align=center] (modelo) {\textbf{3. Modelo IA}\\Random Forest Ensemble};
+    \node [draw, rectangle, rounded corners, below=1.0cm of features, text width=4.0cm, align=center] (scanner) {\textbf{4. Escáner Espacial}\\20 micro-zonas (WGS84)\\Llegada Pico y Calma};
+    \node [draw, rectangle, rounded corners, below=1.0cm of modelo, text width=3.5cm, align=center] (dashboard) {\textbf{5. Consola Táctica}\\Mapa interactivo\\Bitácora SCI-201};
+
+    \draw [->, thick] (ingesta) -- (features);
+    \draw [->, thick] (features) -- (modelo);
+    \draw [->, thick] (modelo) |- (scanner);
+    \draw [->, thick] (scanner) -- (dashboard);
+\end{tikzpicture}
+\caption{Flujo general de procesamiento del Proyecto Júpiter.}
+\label{fig:arquitectura}
+\end{figure}
+
+\subsection{Procesamiento Espacial de 20 Micro-Zonas}
+A diferencia de los pronósticos generales que evalúan a toda la Región de Coquimbo como un único bloque, Proyecto Júpiter divide a La Serena en 20 micro-zonas geográficas independientes con coordenadas WGS84 de alta precisión, tales como Pueblo Islón ($-29.878^\circ, -71.218^\circ$) y Lambert ($-29.818^\circ, -71.148^\circ$).
+
+\section{Modelo de Inteligencia Artificial e Hidrología}
+
+El núcleo predictivo se basa en un modelo de \textit{Random Forest Classifier} entrenado con 21 variables meteorológicas e hidrológicas. Las variables de mayor peso determinante son:
+
+\begin{enumerate}
+    \item \textbf{Humedad del Suelo ($API_{72h}$):} Mide la cantidad de agua retenida en el terreno durante las últimas 72 horas.
+    \item \textbf{Agua Acumulada en Superficie ($Q$):} Calculada mediante la ecuación del Número de Curva del Servicio de Conservación de Suelos (SCS-CN, USDA):
+    \begin{equation}
+        S = \frac{25400}{CN} - 254, \quad Q = \frac{(P - 0.2S)^2}{P + 0.8S}
+    \end{equation}
+    Donde $CN$ representa la impermeabilidad del suelo ($CN=88$ en cerros y $CN=90$ en zonas urbanas).
+    \item \textbf{Pronósticos de Anticipación ($+1\text{h}, +3\text{h}, +6\text{h}$):} Vectores meteorológicos proyectados que permiten evaluar el riesgo horas antes de que la lluvia caiga físicamente.
+\end{enumerate}
+
+\section{Simulación Operativa: Evento del Viernes 31 de Julio}
+
+Basado en el informe meteorológico para La Serena ($18.5\text{ mm}$ totales acumulados), la Figura~\ref{fig:linea_tiempo} resume cómo actuará el sistema durante la jornada.
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[xscale=1.8, yscale=0.8]
+    % Linea temporal
+    \draw[->, thick] (0,0) -- (6.5,0) node[right] {Tiempo};
+    
+    % Hitos
+    \foreach \x/\h/\p/\text in {
+        0.5/05:00/0.9mm/Inicio de lluvia leve.,
+        1.5/08:00/0.5mm/Predicción del pico de 11:00.,
+        2.8/11:00/2.1mm/Primer pulso moderado.,
+        4.0/14:00/4.9mm/Emisión Alerta Máxima 17:00.,
+        5.2/17:00/5.4mm/Pico máximo del temporal.,
+        6.2/20:00/0.3mm/Inicio de Calma y Retorno.
+    } {
+        \draw[thick] (\x,0.1) -- (\x,-0.1) node[below] {\small \h};
+        \node[align=center, font=\scriptsize] at (\x, 1.2) {\textbf{\p}};
+        \node[align=center, font=\tiny, rotate=30, anchor=west] at (\x, 1.6) {\text};
+    }
+\end{tikzpicture}
+\caption{Línea de tiempo de procesamiento del modelo para el viernes 31 de julio.}
+\label{fig:linea_tiempo}
+\end{figure}
+
+\subsection{Análisis de los Pulsos de Precipitación}
+
+\begin{table}[h!]
+\centering
+\caption{Resumen de predicciones del modelo para el evento del 31 de julio.}
+\begin{tabular}{@{}ccllc@{}}
+\toprule
+\textbf{Hora Pulso} & \textbf{Precipitación} & \textbf{Hora Emisión Alerta} & \textbf{Llegada del Pico} & \textbf{Hora de Paso Seguro} \\ \midrule
+11:00 hrs & 2.1 mm & 08:00 hrs (3h antes) & 11:00 hrs & 13:00 hrs \\
+17:00 hrs & 5.4 mm & 14:00 hrs (3h antes) & 17:00 hrs & 19:30 hrs \\ \bottomrule
+\end{tabular}
+\label{tab:pulsos}
+\end{table}
+
+Como se observa en la Tabla~\ref{tab:pulsos}, el pulso de las 17:00 hrs ($5.4\text{ mm}$) resulta ser el más crítico. Esto se debe a que la lluvia previa de la mañana ($12.8\text{ mm}$ acumulados hasta las 14:00 hrs) habrá saturado el terreno. Por ende, la precipitación de las 17:00 hrs se convertirá casi en su totalidad en agua acumulada en superficie ($Q$). El modelo emitirá la alerta a las 14:00 hrs, otorgando una ventana de 3 horas para el resguardo de la población.
+
+\section{Conclusiones y Sustento Técnico}
+
+El Proyecto Júpiter demuestra que es posible transicionar de un esquema de respuesta reactivo a un modelo de prevención predictiva. Mediante el uso de métricas claras como la \textbf{Llegada del Pico} y la \textbf{Hora de Paso Seguro (Calma)}, las autoridades de emergencia (Bomberos y COGRID) pueden tomar decisiones informadas, garantizando la seguridad de la comunidad en La Serena.
+
+\begin{thebibliography}{9}
+\bibitem{usda1986} United States Department of Agriculture (USDA), \textit{Urban Hydrology for Small Watersheds}, Technical Release 55 (TR-55), 1986.
+\bibitem{breiman2001} L. Breiman, \textit{Random Forests}, Machine Learning, vol. 45, no. 1, pp. 5--32, 2001.
+\bibitem{openmeteo} Open-Meteo Weather API, \textit{Non-Real-Time Data Ingestion Protocol}, 2026.
+\end{thebibliography}
+
+\end{document}
