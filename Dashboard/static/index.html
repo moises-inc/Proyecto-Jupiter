@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proyecto Centinela — Dashboard Táctico Puesto de Mando (La Serena)</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Google Fonts -->
+  <link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="brand-container">
+      <div class="brand-logo-icon">📡</div>
+      <div>
+        <div class="brand-title">PROYECTO CENTINELA</div>
+        <div class="brand-subtitle">Puesto de Mando & Conciencia Situacional • La Serena</div>
+      </div>
+    </div>
+    
+    <div class="nav-controls">
+      <div class="live-badge" id="live-indicator">
+        <span class="pulse-dot"></span>
+        <span id="live-mode-text">SISTEMA EN VIVO (NRT)</span>
+      </div>
+      
+      <button class="btn-action btn-simulation" id="btn-toggle-sim" onclick="toggleStormSimulation()">
+        ⚡ Simular Tormenta Extrema
+      </button>
+
+      <button class="btn-action" onclick="generatePdfSci201()">
+        📄 Generar Informe SCI-201 (PDF)
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="dashboard-grid">
+
+    <!-- Status Banner -->
+    <header class="status-banner banner-verde" id="status-banner-box">
+      <div class="status-info">
+        <h2 id="commune-status-text">🟢 ALERTA VERDE COMUNAL (CONDICIONES ESTABLES)</h2>
+        <p id="status-summary-subtext">Monitoreo activo NRT sin riesgo inminente de desborde hidrológico.</p>
+      </div>
+      <div class="timestamp-tag" id="timestamp-tag-text">
+        Última Actualización: 2026-07-29 20:00:00
+      </div>
+    </header>
+
+    <!-- KPI Row -->
+    <section class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Lluvia Satelital 24h</span>
+          <span class="kpi-icon">🌧️</span>
+        </div>
+        <div class="kpi-value" id="kpi-rain-24h">0.0 <span class="kpi-unit">mm</span></div>
+        <div class="kpi-subtext" id="kpi-rain-6h-sub">Últimas 6 horas: 0.0 mm</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Saturación Suelo (API)</span>
+          <span class="kpi-icon">🏔️</span>
+        </div>
+        <div class="kpi-value" id="kpi-api-soil">0.2 <span class="kpi-unit">/ 100</span></div>
+        <div class="kpi-subtext">Capacidad de absorción de tierra</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Isoterma Cero</span>
+          <span class="kpi-icon">❄️</span>
+        </div>
+        <div class="kpi-value" id="kpi-freezing">4.060 <span class="kpi-unit">m.n.m.</span></div>
+        <div class="kpi-subtext" id="kpi-freezing-sub">Límite congelamiento cordillera</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Riesgo Global ML</span>
+          <span class="kpi-icon">🤖</span>
+        </div>
+        <div class="kpi-value" id="kpi-ml-risk">0.0 <span class="kpi-unit">%</span></div>
+        <div class="kpi-subtext">Predicción continua de desborde</div>
+      </div>
+    </section>
+
+    <!-- Left Column: Map & Sectors -->
+    <div class="left-column">
+      
+      <!-- Interactive Map Card -->
+      <div class="card-box" id="map-box">
+        <div class="box-header">
+          <div class="box-title">🗺️ Mapa Táctico de Conciencia Situacional (La Serena)</div>
+          <span class="timestamp-tag">8 Zonas Geográficas Escaneadas</span>
+        </div>
+        <div id="map"></div>
+      </div>
+
+      <!-- Sector Risk Matrix -->
+      <div class="card-box">
+        <div class="box-header">
+          <div class="box-title">📍 Matriz de Riesgo Espacial por Sector (100% Cobertura)</div>
+          <span class="kpi-subtext">Ordenado por severidad de mayor a menor</span>
+        </div>
+        
+        <div class="sector-list" id="sector-grid-list">
+          <!-- Injected dynamically via JavaScript -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Tactical Actions & Trends -->
+    <div class="right-column">
+      
+      <!-- Tactical Recommendations Box -->
+      <div class="card-box">
+        <div class="box-header">
+          <div class="box-title">⚡ Recomendaciones Tácticas SCI (Bomberos)</div>
+        </div>
+
+        <div class="action-list" id="tactical-actions-list">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Trend Chart Box -->
+      <div class="card-box">
+        <div class="box-header">
+          <div class="box-title">📈 Tendencia Hidrometeorológica (24 Horas)</div>
+        </div>
+        <canvas id="trendChart" height="220"></canvas>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Custom App JS -->
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
