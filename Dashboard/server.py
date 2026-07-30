@@ -171,6 +171,7 @@ def simulate_storm(severity: str = Query("extreme", description="normal, moderat
             "name": info["name"],
             "type": info["type"],
             "elevation_m": info["elevation_m"],
+            "radius_m": info["radius_m"],
             "disaster_type": info["disaster_type"],
             "concentration_time_hours": tc_hours,
             "eta_impact": eta_formatted,

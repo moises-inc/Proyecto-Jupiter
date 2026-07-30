@@ -168,28 +168,56 @@ function renderLiveDashboard(data) {
 function updateMapMarker(sector) {
   const coords = [sector.coordinates.lat, sector.coordinates.lon];
   let color = '#2ECC71';
-  if (sector.semaforo.includes('ROJA')) color = '#E74C3C';
-  else if (sector.semaforo.includes('AMARILLA')) color = '#F1C40F';
+  let fillColor = 'rgba(46, 204, 113, 0.18)';
+  if (sector.semaforo.includes('ROJA')) {
+    color = '#E74C3C';
+    fillColor = 'rgba(231, 76, 60, 0.30)';
+  } else if (sector.semaforo.includes('AMARILLA')) {
+    color = '#F1C40F';
+    fillColor = 'rgba(241, 196, 15, 0.25)';
+  }
 
-  if (sectorMarkers[sector.key]) map.removeLayer(sectorMarkers[sector.key]);
+  if (sectorMarkers[sector.key]) {
+    map.removeLayer(sectorMarkers[sector.key].circle);
+    map.removeLayer(sectorMarkers[sector.key].marker);
+  }
 
-  const circle = L.circleMarker(coords, {
-    radius: 12, fillColor: color, color: '#FFFFFF', weight: 2, opacity: 1, fillOpacity: 0.85
+  // 1. Draw Continuous Spatial Coverage Zone Circle
+  const coverageZone = L.circle(coords, {
+    radius: sector.radius_m || 1000,
+    color: color,
+    weight: 1.5,
+    fillColor: fillColor,
+    fillOpacity: 0.35,
+    dashArray: '4, 4'
   }).addTo(map);
 
-  circle.bindPopup(`
-    <div style="color: #070C18; font-family: sans-serif; min-width: 220px;">
-      <strong style="font-size: 1rem;">${sector.name}</strong><br>
-      <hr style="margin: 4px 0;">
+  // 2. Draw Center Tactical Marker
+  const centerMarker = L.circleMarker(coords, {
+    radius: 7,
+    fillColor: color,
+    color: '#FFFFFF',
+    weight: 2,
+    opacity: 1,
+    fillOpacity: 0.95
+  }).addTo(map);
+
+  const popupContent = `
+    <div style="color: #070C18; font-family: sans-serif; min-width: 230px;">
+      <strong style="font-size: 0.95rem; color: #00205B;">${sector.name}</strong><br>
+      <hr style="margin: 4px 0; border: 0; border-top: 1px solid #ccc;">
       <b>Estado:</b> ${sector.semaforo}<br>
       <b>Riesgo ML:</b> ${sector.score_pct}%<br>
-      <b>Peligro:</b> ${sector.disaster_type}<br>
-      <b>ETA Impacto:</b> ${sector.eta_impact}<br>
-      <b>Elevación:</b> ${sector.elevation_m} m.n.m.
+      <b>Peligro Específico:</b> ${sector.disaster_type}<br>
+      <b>ETA Impacto:</b> ${sector.eta_impact} (Tc: ${sector.concentration_time_hours}h)<br>
+      <b>Radio Cobertura:</b> ${sector.radius_m}m • <b>Cota:</b> ${sector.elevation_m} m.n.m.
     </div>
-  `);
+  `;
 
-  sectorMarkers[sector.key] = circle;
+  coverageZone.bindPopup(popupContent);
+  centerMarker.bindPopup(popupContent);
+
+  sectorMarkers[sector.key] = { circle: coverageZone, marker: centerMarker };
 }
 
 function renderTacticalActions(data) {
