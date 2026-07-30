@@ -41,16 +41,27 @@ def run_sensitivity_analysis():
     ]
 
     for rain, freezing in test_scenarios:
-        test_row = base_row.copy()
+        test_row = pd.Series(0.0, index=cols)
         test_row["precip_accum_24h"] = rain
         test_row["precip_accum_6h"] = rain * 0.6
-        test_row["api_72h"] = rain * 0.7
+        test_row["api_72h"] = rain * 0.5
         test_row["freezing_level_scaled"] = freezing / 1000.0
         test_row["high_freezing_level_flag"] = 1 if freezing > 3000.0 else 0
 
         X = pd.DataFrame([test_row[cols]])
         prob = float(model.predict_proba(X)[0][1]) if hasattr(model, "predict_proba") and len(model.classes_) > 1 else 0.0
-        risk = max(prob, float(test_row["risk_score"]))
+        
+        # Water presence gating factor
+        precip_signal = np.clip((rain + (rain * 0.6) * 2.0) / 15.0, 0.0, 1.0)
+        soil_signal = np.clip((rain * 0.5) / 15.0, 0.0, 1.0)
+        water_presence = max(precip_signal, soil_signal)
+
+        freezing_factor = 1.0 + 0.5 * test_row["high_freezing_level_flag"]
+        norm_accum = np.clip(rain / 80.0, 0.0, 1.0)
+        norm_api = np.clip((rain * 0.5) / 60.0, 0.0, 1.0)
+        base_risk = (0.6 * norm_accum + 0.4 * norm_api)
+        
+        risk = min(1.0, max(prob, base_risk) * water_presence * freezing_factor)
 
         tactic = evaluate_sector_tactical_risks(test_row, risk)
 
