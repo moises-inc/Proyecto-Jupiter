@@ -236,6 +236,171 @@ LA_SERENA_SECTOR_GRID = {
         "scs_cn": 92,
         "weight_precip_short": 0.55, "weight_api": 0.35, "weight_freezing": 0.10,
         "lat": -29.890, "lon": -71.260
+    },
+    "el_molle": {
+        "name": "El Molle & Quebradas",
+        "type": "Valle Precordillerano",
+        "elevation_m": 450, "radius_m": 1200,
+        "disaster_type": "Aluvión y Crecida de Río",
+        "concentration_time_hours": 1.2,
+        "recovery_drain_hours": 2.5,
+        "scs_cn": 85,
+        "weight_precip_short": 0.45, "weight_api": 0.35, "weight_freezing": 0.20,
+        "lat": -29.978, "lon": -70.923
+    },
+    "marquesa": {
+        "name": "Marquesa & Río Claro",
+        "type": "Valle Precordillerano",
+        "elevation_m": 500, "radius_m": 1400,
+        "disaster_type": "Desborde de Río Claro",
+        "concentration_time_hours": 1.5,
+        "recovery_drain_hours": 3.0,
+        "scs_cn": 86,
+        "weight_precip_short": 0.50, "weight_api": 0.35, "weight_freezing": 0.15,
+        "lat": -29.967, "lon": -70.963
+    },
+    "vicuna_access": {
+        "name": "Acceso Vicuña / Ruta 41 Alta",
+        "type": "Arteria Vial Precordillera",
+        "elevation_m": 600, "radius_m": 1500,
+        "disaster_type": "Corte de Ruta por Aluvión",
+        "concentration_time_hours": 1.0,
+        "recovery_drain_hours": 2.0,
+        "scs_cn": 88,
+        "weight_precip_short": 0.50, "weight_api": 0.30, "weight_freezing": 0.20,
+        "lat": -30.030, "lon": -70.710
+    },
+    "penuelas": {
+        "name": "Sector Peñuelas & Ruta 5 Sur",
+        "type": "Urbano Costero",
+        "elevation_m": 15, "radius_m": 1200,
+        "disaster_type": "Anegamiento Vial",
+        "concentration_time_hours": 3.0,
+        "recovery_drain_hours": 2.0,
+        "scs_cn": 89,
+        "weight_precip_short": 0.50, "weight_api": 0.40, "weight_freezing": 0.10,
+        "lat": -29.950, "lon": -71.270
+    },
+    "guanaqueros_corridor": {
+        "name": "Corredor Guanaqueros",
+        "type": "Costero Sur",
+        "elevation_m": 25, "radius_m": 1500,
+        "disaster_type": "Corte de Ruta y Deslizamiento",
+        "concentration_time_hours": 2.5,
+        "recovery_drain_hours": 3.0,
+        "scs_cn": 82,
+        "weight_precip_short": 0.45, "weight_api": 0.40, "weight_freezing": 0.15,
+        "lat": -30.198, "lon": -71.423
+    },
+    "tongoy_access": {
+        "name": "Acceso Tongoy / Quebrada Seca",
+        "type": "Costero Sur",
+        "elevation_m": 10, "radius_m": 1600,
+        "disaster_type": "Inundación por Quebrada",
+        "concentration_time_hours": 3.0,
+        "recovery_drain_hours": 4.0,
+        "scs_cn": 80,
+        "weight_precip_short": 0.45, "weight_api": 0.45, "weight_freezing": 0.10,
+        "lat": -30.250, "lon": -71.490
+    },
+    "juan_soldado": {
+        "name": "Cerro Juan Soldado & Norte",
+        "type": "Cerros Costa Norte",
+        "elevation_m": 250, "radius_m": 1400,
+        "disaster_type": "Escorrentía Rápida",
+        "concentration_time_hours": 1.5,
+        "recovery_drain_hours": 2.0,
+        "scs_cn": 85,
+        "weight_precip_short": 0.50, "weight_api": 0.35, "weight_freezing": 0.15,
+        "lat": -29.680, "lon": -71.280
+    },
+    "punta_teatinos": {
+        "name": "Punta Teatinos & Humedal",
+        "type": "Humedal Costero",
+        "elevation_m": 5, "radius_m": 1200,
+        "disaster_type": "Desborde de Humedal",
+        "concentration_time_hours": 4.0,
+        "recovery_drain_hours": 5.0,
+        "scs_cn": 75,
+        "weight_precip_short": 0.35, "weight_api": 0.50, "weight_freezing": 0.15,
+        "lat": -29.820, "lon": -71.275
+    },
+    "el_arrayan": {
+        "name": "Quebrada El Arrayán Costero",
+        "type": "Quebrada Norte",
+        "elevation_m": 60, "radius_m": 1200,
+        "disaster_type": "Aluvión de Quebrada",
+        "concentration_time_hours": 1.5,
+        "recovery_drain_hours": 2.5,
+        "scs_cn": 86,
+        "weight_precip_short": 0.50, "weight_api": 0.35, "weight_freezing": 0.15,
+        "lat": -29.740, "lon": -71.300
+    },
+    "andacollo_access": {
+        "name": "Ruta D-43 / Acceso Andacollo",
+        "type": "Ruta Precordillera",
+        "elevation_m": 400, "radius_m": 1500,
+        "disaster_type": "Corte de Ruta por Aluvión",
+        "concentration_time_hours": 1.5,
+        "recovery_drain_hours": 3.0,
+        "scs_cn": 88,
+        "weight_precip_short": 0.45, "weight_api": 0.40, "weight_freezing": 0.15,
+        "lat": -30.100, "lon": -71.180
+    },
+    "condoriaco_access": {
+        "name": "Acceso Condoriaco / Ruta D-205",
+        "type": "Rural Interior",
+        "elevation_m": 800, "radius_m": 1600,
+        "disaster_type": "Aislamiento por Crecida",
+        "concentration_time_hours": 1.0,
+        "recovery_drain_hours": 2.0,
+        "scs_cn": 87,
+        "weight_precip_short": 0.50, "weight_api": 0.30, "weight_freezing": 0.20,
+        "lat": -29.690, "lon": -70.950
+    },
+    "totoralillo": {
+        "name": "Totoralillo & Las Tacas",
+        "type": "Borde Costero Sur",
+        "elevation_m": 15, "radius_m": 1200,
+        "disaster_type": "Anegamiento Vial Costero",
+        "concentration_time_hours": 3.5,
+        "recovery_drain_hours": 3.0,
+        "scs_cn": 82,
+        "weight_precip_short": 0.45, "weight_api": 0.45, "weight_freezing": 0.10,
+        "lat": -30.060, "lon": -71.320
+    },
+    "pan_de_azucar": {
+        "name": "Pan de Azúcar Sur",
+        "type": "Agrícola Periurbano",
+        "elevation_m": 100, "radius_m": 1400,
+        "disaster_type": "Apozamiento Agrícola",
+        "concentration_time_hours": 3.5,
+        "recovery_drain_hours": 4.0,
+        "scs_cn": 78,
+        "weight_precip_short": 0.40, "weight_api": 0.50, "weight_freezing": 0.10,
+        "lat": -30.010, "lon": -71.200
+    },
+    "embalse_puclaro": {
+        "name": "Borde Embalse Puclaro",
+        "type": "Infraestructura Crítica",
+        "elevation_m": 430, "radius_m": 1800,
+        "disaster_type": "Crecida de Embalse / Deslizamiento",
+        "concentration_time_hours": 4.0,
+        "recovery_drain_hours": 6.0,
+        "scs_cn": 80,
+        "weight_precip_short": 0.30, "weight_api": 0.50, "weight_freezing": 0.20,
+        "lat": -30.010, "lon": -70.830
+    },
+    "herradura_oriente": {
+        "name": "La Herradura Oriente / Sindempart",
+        "type": "Urbano Residencial Sur",
+        "elevation_m": 25, "radius_m": 1100,
+        "disaster_type": "Anegamiento de Colectores",
+        "concentration_time_hours": 3.0,
+        "recovery_drain_hours": 2.0,
+        "scs_cn": 90,
+        "weight_precip_short": 0.50, "weight_api": 0.40, "weight_freezing": 0.10,
+        "lat": -29.980, "lon": -71.350
     }
 }
 

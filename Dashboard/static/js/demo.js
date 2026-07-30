@@ -286,6 +286,17 @@ function renderDemoDashboard(data) {
     });
   }
 
+  const logSectorInput = document.getElementById('log-sector-input');
+  if (logSectorInput && logSectorInput.options.length <= 10) {
+    logSectorInput.innerHTML = '<option value="General La Serena">-- Seleccionar Sector Afectado --</option>';
+    data.sectors.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.name;
+      opt.innerText = s.name;
+      logSectorInput.appendChild(opt);
+    });
+  }
+
   const coverageGroup = [];
 
   data.sectors.forEach(s => {

@@ -9,7 +9,7 @@ graph TD
     A[Ingesta de Datos] --> B[Ingeniería de Características]
     B -->|SCS-CN y Tiempo de Anticipación del Pronóstico| C[Clasificador ML]
     C -->|Ensemble de Random Forest| D[Escáner Espacial]
-    D -->|Cuadrícula de 20 Sectores WGS84| E[Dashboard Dual]
+    D -->|Cuadrícula de 35 Sectores WGS84| E[Dashboard Dual]
     E --> F[Dashboard en Tiempo Real]
     E --> G[Dashboard de Demostración]
 ```
@@ -20,7 +20,7 @@ El sistema utiliza un enfoque de Machine Learning para la predicción de inundac
 - **Modelo**: Ensemble de Random Forest (Bosque Aleatorio) para una clasificación robusta.
 - **Hidrología**: Integra la fórmula hidrológica SCS-CN (Curve Number o Número de Curva del Servicio de Conservación de Suelos) para la estimación de escorrentía.
 - **Estimaciones de Tiempo (Lead Time Forecast)**: 
-  - Pronósticos de anticipación de +1h, +3h y +6h.
+  - Pronósticos de anticipación extendida de +1h, +3h, +6h y +12h.
   - Calcula la **Llegada del Pico** (ETA Peak - tiempo estimado para la inundación máxima).
   - Calcula la **Hora de Paso Seguro / Calma** (ETA Clearance - cuando las aguas retroceden a niveles seguros).
 

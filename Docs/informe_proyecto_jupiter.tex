@@ -33,7 +33,7 @@ Investigador Principal --- Proyecto Júpiter}
 \maketitle
 
 \begin{abstract}
-El presente documento describe la arquitectura, el fundamento hidrológico y el funcionamiento operativo del \textbf{Proyecto Júpiter}, una plataforma predictiva de alerta temprana ante inundaciones y aluviones en la comuna de La Serena. El sistema integra telemetría satelital en tiempo casi real (NRT), un modelo de aprendizaje automático (\textit{Random Forest}) calibrado con física de suelos (método SCS-CN) y un escáner de 20 micro-zonas geográficas calibradas en coordenadas WGS84. Asimismo, se expone la simulación operativa para el evento meteorológico del viernes 31 de julio de 2026, respaldada por datos del pronóstico oficial (DMC, SENAPRED, Meteored y AccuWeather), detallando la saturación antecedente del suelo ($178,0\text{ mm}$ acumulados), la elevación de la isoterma cero ($3.200$--$4.000\text{ m.s.n.m.}$), el cálculo anticipado de los picos de precipitación y la determinación de las ventanas de calma y retorno seguro.
+El presente documento describe la arquitectura, el fundamento hidrológico y el funcionamiento operativo del \textbf{Proyecto Júpiter}, una plataforma predictiva de alerta temprana ante inundaciones y aluviones en la comuna de La Serena. El sistema integra telemetría satelital en tiempo casi real (NRT), un modelo de aprendizaje automático (\textit{Random Forest}) calibrado con física de suelos (método SCS-CN) y un escáner de 35 micro-zonas geográficas calibradas en coordenadas WGS84. Asimismo, se expone la simulación operativa para el evento meteorológico del viernes 31 de julio de 2026, respaldada por datos del pronóstico oficial (DMC, SENAPRED, Meteored y AccuWeather), detallando la saturación antecedente del suelo ($178,0\text{ mm}$ acumulados), la elevación de la isoterma cero ($3.200$--$4.000\text{ m.s.n.m.}$), el cálculo anticipado de los picos de precipitación con pronósticos extendidos (6 a 12 horas) y la determinación de las ventanas de calma y retorno seguro.
 \end{abstract}
 
 \section{Introducción y Contexto Sinóptico}
@@ -53,7 +53,7 @@ Las crecidas repentinas en quebradas precordilleranas (Pueblo Islón, Lambert, L
 
 \section{Arquitectura del Sistema}
 
-El sistema opera bajo un flujo continuo divido en tres capas fundamentales. A diferencia de los pronósticos generales que evalúan a toda la Región de Coquimbo como un único bloque, Proyecto Júpiter divide a La Serena en 20 micro-zonas geográficas independientes con coordenadas WGS84 de alta precisión, tales como Pueblo Islón ($-29.878^\circ, -71.218^\circ$) y Lambert ($-29.818^\circ, -71.148^\circ$).
+El sistema opera bajo un flujo continuo divido en tres capas fundamentales. A diferencia de los pronósticos generales que evalúan a toda la Región de Coquimbo como un único bloque, Proyecto Júpiter divide a La Serena en 35 micro-zonas geográficas independientes con coordenadas WGS84 de alta precisión, tales como Pueblo Islón ($-29.878^\circ, -71.218^\circ$) y Lambert ($-29.818^\circ, -71.148^\circ$).
 
 La estructura de flujo se ilustra en la Figura~\ref{fig:arquitectura}.
 
@@ -72,7 +72,7 @@ La estructura de flujo se ilustra en la Figura~\ref{fig:arquitectura}.
     
     % Fila inferior (sin colisiones de flechas)
     \node [draw, rectangle, rounded corners=5pt, text width=4.2cm, minimum height=1.6cm, below=1.2cm of features, align=center] (scanner) 
-        {\textbf{4. Escáner Espacial}\\ 20 Micro-Zonas WGS84 \\ Llegada Pico y Calma};
+        {\textbf{4. Escáner Espacial}\\ 35 Micro-Zonas WGS84 \\ Llegada Pico y Calma};
     
     \node [draw, rectangle, rounded corners=5pt, text width=4.2cm, minimum height=1.6cm, below=1.2cm of modelo, align=center] (dashboard) 
         {\textbf{5. Consola Táctica}\\ Mapa Interactivo \\ Bitácora SCI-201};
@@ -99,7 +99,7 @@ El núcleo predictivo se basa en un modelo de \textit{Random Forest Classifier} 
         S = \frac{25400}{CN} - 254, \quad Q = \frac{(P - 0.2S)^2}{P + 0.8S}
     \end{equation}
     Donde $CN$ representa la impermeabilidad del suelo ($CN=88$ en cerros y $CN=90$ en zonas urbanas).
-    \item \textbf{Pronósticos de Anticipación ($+1\text{h}, +3\text{h}, +6\text{h}$):} Vectores meteorológicos proyectados que permiten evaluar el riesgo horas antes de que la lluvia caiga físicamente.
+    \item \textbf{Pronósticos de Anticipación extendida ($+1\text{h}, +3\text{h}, +6\text{h}, +12\text{h}$):} Vectores meteorológicos proyectados que permiten evaluar el riesgo horas antes de que la lluvia caiga físicamente.
 \end{enumerate}
 
 \newpage
