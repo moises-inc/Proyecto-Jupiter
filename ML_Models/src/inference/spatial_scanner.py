@@ -97,6 +97,20 @@ LA_SERENA_SECTOR_GRID = {
 }
 
 
+def get_current_nrt_row(df: pd.DataFrame) -> pd.Series:
+    """
+    Selects the row matching current time (or nearest past hour) instead of picking future forecast hours.
+    """
+    now = pd.Timestamp.now()
+    if df["time"].dt.tz is not None:
+        now = pd.Timestamp.now(tz="America/Santiago")
+    
+    past_df = df[df["time"] <= now]
+    if not past_df.empty:
+        return past_df.iloc[-1]
+    return df.iloc[0]
+
+
 def scan_full_la_serena_grid() -> dict:
     """
     Executes a 100% spatial grid scan across all 8 geographic sectors of La Serena.
@@ -105,34 +119,43 @@ def scan_full_la_serena_grid() -> dict:
     features_df = generate_hydrological_features(raw_df)
     model, feature_cols = load_centinela_model()
 
-    latest_row = features_df.iloc[-1]
-    X_latest = pd.DataFrame([latest_row[feature_cols]])
+    # Get current NRT row matching current time
+    current_row = get_current_nrt_row(features_df)
+    X_current = pd.DataFrame([current_row[feature_cols]])
 
     # Base ML probability
     if hasattr(model, "predict_proba"):
-        probs = model.predict_proba(X_latest)[0]
+        probs = model.predict_proba(X_current)[0]
         classes = list(model.classes_)
         base_ml_prob = float(probs[classes.index(1)]) if 1 in classes else 0.0
     else:
-        base_ml_prob = float(model.predict(X_latest)[0])
+        base_ml_prob = float(model.predict(X_current)[0])
 
-    precip_24h = float(latest_row.get("precip_accum_24h", 0.0))
-    precip_6h = float(latest_row.get("precip_accum_6h", 0.0))
-    api_72h = float(latest_row.get("api_72h", 0.0))
-    high_freezing = float(latest_row.get("high_freezing_level_flag", 0))
+    precip_24h = float(current_row.get("precip_accum_24h", 0.0))
+    precip_6h = float(current_row.get("precip_accum_6h", 0.0))
+    api_72h = float(current_row.get("api_72h", 0.0))
+    high_freezing = float(current_row.get("high_freezing_level_flag", 0))
+
+    # Water presence gating factor (0.0 if dry, 1.0 if heavy rain)
+    precip_signal = np.clip((precip_24h + precip_6h * 2.0) / 15.0, 0.0, 1.0)
+    soil_signal = np.clip(api_72h / 15.0, 0.0, 1.0)
+    water_presence = max(precip_signal, soil_signal)
 
     scanned_sectors = []
     red_count = 0
     yellow_count = 0
 
     for key, info in LA_SERENA_SECTOR_GRID.items():
-        score = min(
-            1.0,
+        freezing_factor = 1.0 + 0.5 * high_freezing if info["weight_freezing"] > 0.1 else 1.0
+        
+        base_score = (
             info["weight_precip_short"] * (precip_6h / 20.0) +
             info["weight_api"] * (api_72h / 25.0) +
-            info["weight_freezing"] * high_freezing +
             0.2 * base_ml_prob
         )
+        
+        # Risk score is gated by water presence
+        score = min(1.0, base_score * water_presence * freezing_factor)
         score_pct = round(score * 100.0, 1)
 
         if score >= 0.7:
@@ -167,14 +190,14 @@ def scan_full_la_serena_grid() -> dict:
         commune_status = "🟢 ALERTA VERDE COMUNAL (CONDICIONES ESTABLES)"
 
     return {
-        "timestamp": str(latest_row["time"]),
+        "timestamp": str(current_row["time"]),
         "total_sectors_scanned": len(scanned_sectors),
         "commune_status": commune_status,
         "telemetry_summary": {
             "precip_accum_24h_mm": round(precip_24h, 1),
             "precip_accum_6h_mm": round(precip_6h, 1),
             "api_soil_saturation": round(api_72h, 1),
-            "freezing_level_m": round(float(latest_row["freezing_level_scaled"] * 1000.0), 0)
+            "freezing_level_m": round(float(current_row["freezing_level_scaled"] * 1000.0), 0)
         },
         "sectors": scanned_sectors
     }

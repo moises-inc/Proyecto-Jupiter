@@ -70,20 +70,25 @@ def generate_hydrological_features(df: pd.DataFrame) -> pd.DataFrame:
     else:
         df["pressure_drop_6h"] = 0.0
 
-    # 6. Target Labels (Calculated for Ground Truth Training)
-    # High runoff risk if heavy precipitation + saturated soil + high freezing level
+    # 6. Target Labels & Calibrated Physical Risk Score
+    # Risk should ONLY be active when there is actual precipitation or antecedent soil saturation
+    precip_signal = np.clip((df["precip_accum_24h"] + df["precip_accum_6h"] * 2.0) / 15.0, 0.0, 1.0)
+    soil_signal = np.clip(df["api_72h"] / 15.0, 0.0, 1.0)
+    water_presence = np.maximum(precip_signal, soil_signal)
+
+    norm_accum = np.clip(df["precip_accum_24h"] / 80.0, 0.0, 1.0)
+    norm_api = np.clip(df["api_72h"] / 60.0, 0.0, 1.0)
+    freezing_multiplier = 1.0 + 0.5 * np.clip((df["freezing_level_scaled"] - 2.5) / 1.5, 0.0, 1.0)
+
+    base_risk = (0.6 * norm_accum + 0.4 * norm_api)
+    raw_risk = base_risk * water_presence * freezing_multiplier
+
+    df["risk_score"] = np.clip(raw_risk, 0.0, 1.0)
+
     runoff_condition = (
         ((df["precip_accum_24h"] > 35.0) | (df["precip_accum_6h"] > 20.0)) &
         (df["api_72h"] > 25.0)
     )
-
-    # Calculated risk score (0.0 to 1.0)
-    norm_accum = np.clip(df["precip_accum_24h"] / 80.0, 0.0, 1.0)
-    norm_api = np.clip(df["api_72h"] / 60.0, 0.0, 1.0)
-    norm_freezing = np.clip((df["freezing_level_scaled"] - 2.5) / 1.5, 0.0, 1.0)
-
-    raw_risk = 0.5 * norm_accum + 0.3 * norm_api + 0.2 * norm_freezing
-    df["risk_score"] = np.clip(raw_risk, 0.0, 1.0)
     df["overflow_target"] = runoff_condition.astype(int)
 
     return df
