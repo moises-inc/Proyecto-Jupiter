@@ -1,7 +1,7 @@
 """
 Proyecto Centinela - Spatial Grid Scanner Module
 Performs a 20-zone high-resolution geographic risk scan across 100% of La Serena footprint,
-calibrated with exact WGS84 coordinates matching street labels, precise disaster classification,
+calibrated with pinpoint WGS84 coordinates for Pueblo Islón and Lambert, precise disaster classification,
 and Estimated Time of Arrival (ETA) calculation.
 """
 
@@ -18,22 +18,31 @@ from src.inference.live_inference import load_centinela_model
 # 20 High-Resolution Geographic Sectors with exact calibrated WGS84 coordinates
 LA_SERENA_SECTOR_GRID = {
     "pueblo_islon": {
-        "name": "Pueblo Islón / Quebrada Santa Gracia",
-        "type": "Precordillera / Quebrada",
-        "elevation_m": 150, "radius_m": 1200,
-        "disaster_type": "Aluvión y Escorrentía Detrítica",
+        "name": "Pueblo Islón / Puente D-201",
+        "type": "Precordillera / Ribereño",
+        "elevation_m": 120, "radius_m": 1000,
+        "disaster_type": "Aluvión y Escorrentía Detrítica en Quebrada",
         "concentration_time_hours": 1.5,
         "weight_precip_short": 0.50, "weight_api": 0.35, "weight_freezing": 0.15,
-        "lat": -29.870, "lon": -71.215  # Calibrated to exact town label on D-201
+        "lat": -29.878, "lon": -71.218  # Pinpoint Pueblo Islón town center on D-201
     },
     "lambert_minero": {
-        "name": "Lambert & Acceso Minero Norte",
+        "name": "Lambert (Poblado y Escuela)",
         "type": "Precordillera / Minero",
-        "elevation_m": 220, "radius_m": 1400,
+        "elevation_m": 220, "radius_m": 1200,
         "disaster_type": "Aluvión en Quebrada y Aislamiento Rural",
         "concentration_time_hours": 1.5,
         "weight_precip_short": 0.45, "weight_api": 0.35, "weight_freezing": 0.20,
-        "lat": -29.825, "lon": -71.175  # Calibrated to exact Lambert town label on D-201
+        "lat": -29.818, "lon": -71.148  # Pinpoint Lambert village center on D-201
+    },
+    "el_brillador_quebrada": {
+        "name": "El Brillador & Quebrada Norte",
+        "type": "Cerros y Quebradas Norte",
+        "elevation_m": 310, "radius_m": 1400,
+        "disaster_type": "Escorrentía Rápida en Ladera Minera",
+        "concentration_time_hours": 1.2,
+        "weight_precip_short": 0.50, "weight_api": 0.30, "weight_freezing": 0.20,
+        "lat": -29.825, "lon": -71.175  # El Brillador hill district
     },
     "santa_gracia_alta": {
         "name": "Santa Gracia Alta / Pelícano",
@@ -42,7 +51,7 @@ LA_SERENA_SECTOR_GRID = {
         "disaster_type": "Aluvión de Alta Quebrada",
         "concentration_time_hours": 1.0,
         "weight_precip_short": 0.50, "weight_api": 0.30, "weight_freezing": 0.20,
-        "lat": -29.785, "lon": -71.130  # High mountain watershed
+        "lat": -29.785, "lon": -71.130
     },
     "las_rojas": {
         "name": "Las Rojas & Entrada Precordillera",
@@ -51,7 +60,7 @@ LA_SERENA_SECTOR_GRID = {
         "disaster_type": "Aluvión en Quebrada y Corte Ruta D-41",
         "concentration_time_hours": 1.5,
         "weight_precip_short": 0.45, "weight_api": 0.35, "weight_freezing": 0.20,
-        "lat": -29.970, "lon": -71.055  # Calibrated to Las Rojas town on D-41
+        "lat": -29.970, "lon": -71.055
     },
     "algarrobito_gabriela": {
         "name": "Algarrobito / Gabriela Mistral / Quebrada Talca",
@@ -60,7 +69,7 @@ LA_SERENA_SECTOR_GRID = {
         "disaster_type": "Escorrentía Detrítica y Crecida de Quebrada",
         "concentration_time_hours": 2.0,
         "weight_precip_short": 0.45, "weight_api": 0.40, "weight_freezing": 0.15,
-        "lat": -29.960, "lon": -71.120  # Calibrated to Algarrobito
+        "lat": -29.960, "lon": -71.120
     },
     "altovalsol": {
         "name": "Altovalsol & Valle Medio",
@@ -69,7 +78,7 @@ LA_SERENA_SECTOR_GRID = {
         "disaster_type": "Crecida de Cauce y Escorrentía Agrícola",
         "concentration_time_hours": 2.5,
         "weight_precip_short": 0.40, "weight_api": 0.45, "weight_freezing": 0.15,
-        "lat": -29.945, "lon": -71.165  # Calibrated to Altovalsol
+        "lat": -29.945, "lon": -71.165
     },
     "coquimbito_bellavista": {
         "name": "Coquimbito / Bellavista / Pan de Azúcar Norte",
@@ -78,7 +87,7 @@ LA_SERENA_SECTOR_GRID = {
         "disaster_type": "Apozamiento Agrícola y Escorrentía de Faldeo",
         "concentration_time_hours": 3.0,
         "weight_precip_short": 0.40, "weight_api": 0.45, "weight_freezing": 0.15,
-        "lat": -29.955, "lon": -71.185  # Calibrated to Coquimbito
+        "lat": -29.955, "lon": -71.185
     },
     "las_companias_alta": {
         "name": "Las Compañías (Alta y Villa Lambert)",
@@ -179,15 +188,6 @@ LA_SERENA_SECTOR_GRID = {
         "weight_precip_short": 0.45, "weight_api": 0.45, "weight_freezing": 0.10,
         "lat": -29.915, "lon": -71.220
     },
-    "alfalfares_vegas": {
-        "name": "Alfalfares & Vegas Sur / Norte",
-        "type": "Agrícola / Humedal Bajo",
-        "elevation_m": 15, "radius_m": 1000,
-        "disaster_type": "Apozamiento Severo y Subida de Napa Freática",
-        "concentration_time_hours": 6.0,
-        "weight_precip_short": 0.30, "weight_api": 0.55, "weight_freezing": 0.15,
-        "lat": -29.925, "lon": -71.235
-    },
     "ruta5_pasos_nivel": {
         "name": "Ruta 5 Norte & Pasos Bajo Nivel (Km 490-500)",
         "type": "Arteria Vial Crítica",
@@ -201,9 +201,6 @@ LA_SERENA_SECTOR_GRID = {
 
 
 def get_current_nrt_row(df: pd.DataFrame) -> pd.Series:
-    """
-    Selects current timestamp row from NRT dataset.
-    """
     now = pd.Timestamp.now()
     if df["time"].dt.tz is not None:
         now = pd.Timestamp.now(tz="America/Santiago")
@@ -215,10 +212,6 @@ def get_current_nrt_row(df: pd.DataFrame) -> pd.Series:
 
 
 def scan_full_la_serena_grid() -> dict:
-    """
-    Executes a 20-zone high-resolution spatial grid scan across 100% of La Serena footprint.
-    Provides continuous spatial coverage, exact WGS84 positioning, disaster types, and ETA.
-    """
     raw_df = fetch_live_nrt_data()
     features_df = generate_hydrological_features(raw_df)
     model, feature_cols = load_centinela_model()
@@ -226,7 +219,6 @@ def scan_full_la_serena_grid() -> dict:
     current_row = get_current_nrt_row(features_df)
     X_current = pd.DataFrame([current_row[feature_cols]])
 
-    # Base ML probability
     if hasattr(model, "predict_proba"):
         probs = model.predict_proba(X_current)[0]
         classes = list(model.classes_)
@@ -239,7 +231,6 @@ def scan_full_la_serena_grid() -> dict:
     api_72h = float(current_row.get("api_72h", 0.0))
     high_freezing = float(current_row.get("high_freezing_level_flag", 0))
 
-    # Water presence gating factor (0.0 if dry, 1.0 if heavy rain)
     precip_signal = np.clip((precip_24h + precip_6h * 2.0) / 15.0, 0.0, 1.0)
     soil_signal = np.clip(api_72h / 15.0, 0.0, 1.0)
     water_presence = max(precip_signal, soil_signal)
@@ -262,7 +253,6 @@ def scan_full_la_serena_grid() -> dict:
         score = min(1.0, base_score * water_presence * freezing_factor)
         score_pct = round(score * 100.0, 1)
 
-        # ETA Calculation: Add concentration time to current timestamp
         tc_hours = info["concentration_time_hours"]
         eta_time = current_dt + pd.Timedelta(hours=tc_hours)
         eta_formatted = eta_time.strftime("%H:%M hrs")
@@ -290,10 +280,8 @@ def scan_full_la_serena_grid() -> dict:
             "coordinates": {"lat": info["lat"], "lon": info["lon"]}
         })
 
-    # Sort sectors by risk score descending
     scanned_sectors.sort(key=lambda x: x["score_pct"], reverse=True)
 
-    # General commune alert level
     if red_count > 0:
         commune_status = "ALERTA ROJA COMUNAL (EVACUACIÓN Y RESCATE PREVENTIVO ACTIVO)"
     elif yellow_count > 0:
@@ -313,32 +301,3 @@ def scan_full_la_serena_grid() -> dict:
         },
         "sectors": scanned_sectors
     }
-
-
-def print_full_scan_report(scan_data: dict):
-    """
-    Prints a clean, professional spatial scan report for La Serena across 20 high-resolution sectors.
-    """
-    print("\n" + "=" * 90)
-    print(" PROYECTO CENTINELA — ESCANEO ESPACIAL CONTINUO DE LA SERENA (20 ZONAS)")
-    print("=" * 90)
-    print(f" Timestamp: {scan_data['timestamp']}")
-    print(f" Estado Comunal: {scan_data['commune_status']}")
-    print(f" Total Zonas Escaneadas: {scan_data['total_sectors_scanned']}")
-    print("-" * 90)
-    print(" RESUMEN DE TELEMETRÍA NRT:")
-    t = scan_data["telemetry_summary"]
-    print(f"  Precipitación 24h: {t['precip_accum_24h_mm']} mm  |  Precipitación 6h: {t['precip_accum_6h_mm']} mm")
-    print(f"  Saturación de Suelo (API): {t['api_soil_saturation']}  |  Isoterma Cero: {t['freezing_level_m']} m.n.m.")
-    print("-" * 90)
-    print(" MATRIZ DE RIESGO Y TIEMPO ESTIMADO DE IMPACTO (ETA):")
-    print(f" {'#':<3} | {'Sector / Zona':<42} | {'Peligro Específico':<32} | {'ETA Impacto':<10} | {'Riesgo %':<8}")
-    print("-" * 90)
-    for idx, s in enumerate(scan_data["sectors"], 1):
-        print(f" {idx:<3} | {s['name']:<42} | {s['disaster_type']:<32} | {s['eta_impact']:<10} | {s['score_pct']:<8.1f}%")
-    print("=" * 90 + "\n")
-
-
-if __name__ == "__main__":
-    scan_result = scan_full_la_serena_grid()
-    print_full_scan_report(scan_result)

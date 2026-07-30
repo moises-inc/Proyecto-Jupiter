@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Proyecto Centinela — Consola de Demostración & Simulación (demo.js v2.5)
+   Proyecto Centinela — Consola de Demostración & Simulación (demo.js v3.0)
    ========================================================================== */
 
 let map;
@@ -8,10 +8,23 @@ let trendChart;
 let currentScenario = 'normal';
 let isInitialBoundsSet = false;
 
+// Layer Toggles & Audio State
+let radarLayer = null;
+let isRadarActive = false;
+let evacuationGroup = null;
+let isEvacuationActive = false;
+let isAudioAlarmEnabled = false;
+let audioCtx = null;
+
+let sciLogEntries = [
+  { timestamp: "18:00 hrs", sector: "Pueblo Islón", user: "Demo Operador", desc: "Simulación iniciada. Monitoreo de cuenca en precordillera." }
+];
+
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
   initChart();
   loadDemoScenario('normal');
+  renderSciLogList();
 });
 
 function initMap() {
@@ -22,6 +35,137 @@ function initMap() {
     subdomains: 'abcd',
     maxZoom: 19
   }).addTo(map);
+
+  initEvacuationRoutes();
+}
+
+function initEvacuationRoutes() {
+  evacuationGroup = L.featureGroup();
+
+  const safePuebloIslon = L.circleMarker([-29.865, -71.200], {
+    radius: 9, fillColor: '#00D2FF', color: '#FFFFFF', weight: 2, fillOpacity: 0.9
+  }).bindPopup("<b>Zona Segura N°1 (Pueblo Islón)</b><br>Cerro El Brillador Cota 180m");
+
+  const routeIslon = L.polyline([
+    [-29.878, -71.218],
+    [-29.870, -71.210],
+    [-29.865, -71.200]
+  ], { color: '#00D2FF', weight: 3, dashArray: '6, 6' }).bindPopup("Ruta Evacuación Aluvional Pueblo Islón");
+
+  const safeLasRojas = L.circleMarker([-29.960, -71.045], {
+    radius: 9, fillColor: '#00D2FF', color: '#FFFFFF', weight: 2, fillOpacity: 0.9
+  }).bindPopup("<b>Zona Segura N°2 (Las Rojas)</b><br>Ladera Norte Cota 280m");
+
+  const routeLasRojas = L.polyline([
+    [-29.970, -71.055],
+    [-29.960, -71.045]
+  ], { color: '#00D2FF', weight: 3, dashArray: '6, 6' }).bindPopup("Ruta Evacuación Las Rojas");
+
+  evacuationGroup.addLayer(safePuebloIslon);
+  evacuationGroup.addLayer(routeIslon);
+  evacuationGroup.addLayer(safeLasRojas);
+  evacuationGroup.addLayer(routeLasRojas);
+}
+
+function toggleEvacuationRoutes() {
+  isEvacuationActive = !isEvacuationActive;
+  if (isEvacuationActive) {
+    evacuationGroup.addTo(map);
+  } else {
+    map.removeLayer(evacuationGroup);
+  }
+}
+
+function toggleRadarLayer() {
+  isRadarActive = !isRadarActive;
+  if (isRadarActive) {
+    if (!radarLayer) {
+      radarLayer = L.tileLayer('https://tilecache.rainviewer.com/v2/radar/nowcast/256/{z}/{x}/{y}/2/1_1.png', {
+        opacity: 0.65,
+        attribution: '&copy; RainViewer Weather Radar NRT'
+      });
+    }
+    radarLayer.addTo(map);
+  } else {
+    if (radarLayer) map.removeLayer(radarLayer);
+  }
+}
+
+function toggleAudioAlarm() {
+  isAudioAlarmEnabled = !isAudioAlarmEnabled;
+  const btn = document.getElementById('btn-toggle-sound');
+  if (isAudioAlarmEnabled) {
+    btn.innerText = '🔔 Alarma Sonora: ON';
+    btn.style.borderColor = '#2ECC71';
+    btn.style.color = '#2ECC71';
+    playEmergencyChime();
+  } else {
+    btn.innerText = '🔔 Alarma Sonora: OFF';
+    btn.style.borderColor = '#F1C40F';
+    btn.style.color = '#F1C40F';
+  }
+}
+
+function playEmergencyChime() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+  } catch (e) {
+    console.error('Web Audio API no soportado:', e);
+  }
+}
+
+function addSciLogEntry() {
+  const sectorInput = document.getElementById('log-sector-input');
+  const userInput = document.getElementById('log-user-input');
+  const descInput = document.getElementById('log-desc-input');
+
+  if (!descInput.value.trim()) return;
+
+  const now = new Date();
+  const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')} hrs`;
+
+  sciLogEntries.unshift({
+    timestamp: timeStr,
+    sector: sectorInput.value.trim() || 'General La Serena',
+    user: userInput.value.trim() || 'Demo Operador',
+    desc: descInput.value.trim()
+  });
+
+  descInput.value = '';
+  renderSciLogList();
+}
+
+function renderSciLogList() {
+  const list = document.getElementById('sci-log-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  sciLogEntries.forEach(item => {
+    const card = document.createElement('div');
+    card.style.background = 'rgba(13,22,41,0.9)';
+    card.style.borderLeft = '3px solid var(--brand-blue)';
+    card.style.padding = '0.4rem 0.6rem';
+    card.style.borderRadius = '4px';
+    card.style.fontSize = '0.75rem';
+
+    card.innerHTML = `
+      <div style="display:flex; justify-between; align-items:center; color: var(--text-secondary); margin-bottom: 2px;">
+        <strong>[${item.sector}]</strong>
+        <span style="font-family: var(--font-mono); color: var(--brand-blue);">${item.timestamp} • ${item.user}</span>
+      </div>
+      <div style="color: var(--text-primary);">${item.desc}</div>
+    `;
+    list.appendChild(card);
+  });
 }
 
 function initChart() {
@@ -57,30 +201,19 @@ function initChart() {
       responsive: true,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { labels: { color: '#F0F4F8', font: { family: 'Inter', size: 12, weight: 'bold' } } },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              let label = context.dataset.label || '';
-              if (label) label += ': ';
-              if (context.datasetIndex === 0) label += context.parsed.y + ' mm';
-              else label += context.parsed.y.toLocaleString('es-CL') + ' m.n.m.';
-              return label;
-            }
-          }
-        }
+        legend: { labels: { color: '#F0F4F8', font: { family: 'Inter', size: 11, weight: 'bold' } } }
       },
       scales: {
         x: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
         yRain: {
           type: 'linear', position: 'left', min: 0, max: 100,
-          title: { display: true, text: 'Lluvia Acumulada (mm)', color: '#00D2FF', font: { weight: 'bold' } },
+          title: { display: true, text: 'Lluvia (mm)', color: '#00D2FF', font: { weight: 'bold' } },
           ticks: { color: '#00D2FF' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }
         },
         yFreezing: {
           type: 'linear', position: 'right', min: 1000, max: 5000,
-          title: { display: true, text: 'Isoterma Cero (m.n.m.)', color: '#F1C40F', font: { weight: 'bold' } },
-          ticks: { color: '#F1C40F', callback: v => v.toLocaleString('es-CL') + ' m' },
+          title: { display: true, text: 'Isoterma (m)', color: '#F1C40F', font: { weight: 'bold' } },
+          ticks: { color: '#F1C40F', callback: v => v + 'm' },
           grid: { drawOnChartArea: false }
         }
       }
@@ -112,6 +245,7 @@ function renderDemoDashboard(data) {
   if (data.commune_status.includes('ROJA')) {
     bannerBox.classList.add('banner-rojo');
     summarySubtext.innerText = 'SIMULACIÓN: ALERTA ROJA POR ALUVIÓN Y DESBORDE (Temporal 19 de Julio 2026).';
+    if (isAudioAlarmEnabled) playEmergencyChime();
   } else if (data.commune_status.includes('AMARILLA')) {
     bannerBox.classList.add('banner-amarillo');
     summarySubtext.innerText = 'SIMULACIÓN: PRE-ALERTA Y LLUVIAS MODERADAS (Preparación de Recursos).';

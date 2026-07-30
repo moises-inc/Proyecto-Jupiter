@@ -8,7 +8,7 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <!-- Google Fonts & Custom CSS -->
-  <link rel="stylesheet" href="/static/css/dashboard.css?v=2.0" />
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=3.0" />
 </head>
 <body>
 
@@ -27,6 +27,10 @@
         <span class="pulse-dot"></span>
         <span id="live-mode-text">SISTEMA EN VIVO NRT (DESCARGA: CADA 5 MIN)</span>
       </div>
+
+      <button class="btn-action btn-simulation" id="btn-toggle-sound" onclick="toggleAudioAlarm()">
+        🔔 Alarma Sonora: OFF
+      </button>
 
       <button class="btn-action" onclick="generatePdfSci201()">
         Generar Informe SCI-201 (PDF)
@@ -88,11 +92,16 @@
       <div class="card-box" id="map-box">
         <div class="box-header">
           <div class="box-title">Mapa Táctico de Conciencia Situacional (La Serena)</div>
-          <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <select id="sector-focus-select" class="btn-action" style="background: rgba(13, 22, 41, 0.9); border: 1px solid var(--card-border); color: var(--text-primary);" onchange="focusSectorFromSelect(this.value)">
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn-action btn-simulation" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="toggleRadarLayer()">
+              📡 Radar Lluvia NRT
+            </button>
+            <button class="btn-action btn-simulation" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="toggleEvacuationRoutes()">
+              🚶 Rutas Evacuación
+            </button>
+            <select id="sector-focus-select" class="btn-action" style="background: rgba(13, 22, 41, 0.9); border: 1px solid var(--card-border); color: var(--text-primary); font-size: 0.75rem; padding: 0.25rem 0.5rem;" onchange="focusSectorFromSelect(this.value)">
               <option value="">-- Enfocar Sector --</option>
             </select>
-            <span class="timestamp-tag">20 Zonas Geográficas Escaneadas</span>
           </div>
         </div>
         <div id="map"></div>
@@ -110,7 +119,7 @@
       </div>
     </div>
 
-    <!-- Right Column: Tactical Assistant & Trends -->
+    <!-- Right Column: Tactical Assistant, Trends & SCI Incident Log -->
     <div class="right-column">
       <div class="card-box">
         <div class="box-header">
@@ -126,8 +135,30 @@
         <div class="box-header">
           <div class="box-title">Tendencia Hidrometeorológica (24 Horas)</div>
         </div>
-        <canvas id="trendChart" height="220"></canvas>
+        <canvas id="trendChart" height="200"></canvas>
       </div>
+
+      <!-- Punto 2: Bitácora Táctica SCI -->
+      <div class="card-box">
+        <div class="box-header">
+          <div class="box-title">Bitácora Táctica de Incidentes (SCI)</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem;">
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="log-sector-input" placeholder="Sector (ej: Pueblo Islón)" style="flex: 1; background: rgba(7,12,24,0.8); border: 1px solid var(--card-border); color: white; padding: 0.4rem; border-radius: 6px; font-size: 0.8rem;" />
+            <input type="text" id="log-user-input" placeholder="Operador" style="width: 110px; background: rgba(7,12,24,0.8); border: 1px solid var(--card-border); color: white; padding: 0.4rem; border-radius: 6px; font-size: 0.8rem;" />
+          </div>
+          <textarea id="log-desc-input" placeholder="Observación de terreno (ej: Cuadrilla confirma 15mm en Pueblo Islón y aumento de cauce)" rows="2" style="background: rgba(7,12,24,0.8); border: 1px solid var(--card-border); color: white; padding: 0.4rem; border-radius: 6px; font-size: 0.8rem; resize: none;"></textarea>
+          <button class="btn-action" style="align-self: flex-end; padding: 0.35rem 0.75rem; font-size: 0.8rem;" onclick="addSciLogEntry()">
+            + Registrar Evento SCI
+          </button>
+        </div>
+
+        <div id="sci-log-list" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.4rem;">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+
     </div>
 
   </main>
@@ -136,6 +167,6 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Realtime Operational JS -->
-  <script src="/static/js/realtime.js?v=2.0"></script>
+  <script src="/static/js/realtime.js?v=3.0"></script>
 </body>
 </html>
