@@ -1,12 +1,13 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[spanish,es-tabla]{babel}
-\usepackage[margin=2.5cm]{geometry}
+\usepackage[margin=2.2cm]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{caption}
+\usepackage{microtype}
 \usepackage{tikz}
-\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc}
 \usepackage{hyperref}
 
 \hypersetup{
@@ -15,6 +16,10 @@
     citecolor=black,
     urlcolor=black
 }
+
+% Prevent hyphenation in TikZ boxes
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
 
 \title{\textbf{Proyecto Júpiter: Sistema de Alerta Temprana e Inteligencia Hidrometeorológica para La Serena}\\
 \large Informe Técnico de Funcionamiento y Simulación Operativa}
@@ -44,28 +49,40 @@ Las crecidas repentinas en quebradas precordilleranas (como Pueblo Islón, Lambe
 
 \section{Arquitectura del Sistema}
 
-El sistema opera bajo un flujo continuo divido en tres capas fundamentales, ilustradas en la Figura~\ref{fig:arquitectura}.
+El sistema opera bajo un flujo continuo divido en tres capas fundamentales. A diferencia de los pronósticos generales que evalúan a toda la Región de Coquimbo como un único bloque, Proyecto Júpiter divide a La Serena en 20 micro-zonas geográficas independientes con coordenadas WGS84 de alta precisión, tales como Pueblo Islón ($-29.878^\circ, -71.218^\circ$) y Lambert ($-29.818^\circ, -71.148^\circ$).
 
-\begin{figure}[h!]
+La estructura de flujo se ilustra en la Figura~\ref{fig:arquitectura}.
+
+\begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[node distance=1.5cm, auto, >=Stealth]
-    \node [draw, rectangle, rounded corners, text width=3.0cm, align=center] (ingesta) {\textbf{1. Ingesta Satelital}\\Datos meteorológicos NRT cada 5 min};
-    \node [draw, rectangle, rounded corners, right=0.8cm of ingesta, text width=3.2cm, align=center] (features) {\textbf{2. Ingeniería Datos}\\Humedad suelo ($API$)\\Infiltración (SCS-CN)};
-    \node [draw, rectangle, rounded corners, right=0.8cm of features, text width=3.2cm, align=center] (modelo) {\textbf{3. Modelo IA}\\Random Forest Ensemble};
-    \node [draw, rectangle, rounded corners, below=1.0cm of features, text width=4.0cm, align=center] (scanner) {\textbf{4. Escáner Espacial}\\20 micro-zonas (WGS84)\\Llegada Pico y Calma};
-    \node [draw, rectangle, rounded corners, below=1.0cm of modelo, text width=3.5cm, align=center] (dashboard) {\textbf{5. Consola Táctica}\\Mapa interactivo\\Bitácora SCI-201};
+\begin{tikzpicture}[node distance=1.2cm and 1.5cm, auto, >=Stealth]
+    % Fila superior
+    \node [draw, rectangle, rounded corners=5pt, text width=3.4cm, minimum height=1.6cm, align=center] (ingesta) 
+        {\textbf{1. Ingesta Satelital}\\ Telemetría NRT \\ cada 5 minutos};
+    
+    \node [draw, rectangle, rounded corners=5pt, text width=3.6cm, minimum height=1.6cm, right=of ingesta, align=center] (features) 
+        {\textbf{2. Ingeniería de Datos}\\ Humedad Suelo ($API$)\\ Infiltración (SCS-CN)};
+    
+    \node [draw, rectangle, rounded corners=5pt, text width=3.6cm, minimum height=1.6cm, right=of features, align=center] (modelo) 
+        {\textbf{3. Modelo de IA}\\ Ensamble Classifier \\ Random Forest};
+    
+    % Fila inferior (sin colisiones de flechas)
+    \node [draw, rectangle, rounded corners=5pt, text width=4.2cm, minimum height=1.6cm, below=1.2cm of features, align=center] (scanner) 
+        {\textbf{4. Escáner Espacial}\\ 20 Micro-Zonas WGS84 \\ Llegada Pico y Calma};
+    
+    \node [draw, rectangle, rounded corners=5pt, text width=4.2cm, minimum height=1.6cm, below=1.2cm of modelo, align=center] (dashboard) 
+        {\textbf{5. Consola Táctica}\\ Mapa Interactivo \\ Bitácora SCI-201};
 
-    \draw [->, thick] (ingesta) -- (features);
-    \draw [->, thick] (features) -- (modelo);
-    \draw [->, thick] (modelo) |- (scanner);
-    \draw [->, thick] (scanner) -- (dashboard);
+    % Conexiones claras y limpias
+    \draw [->, line width=1.1pt] (ingesta) -- (features);
+    \draw [->, line width=1.1pt] (features) -- (modelo);
+    \draw [->, line width=1.1pt] (modelo) -- (dashboard);
+    \draw [->, line width=1.1pt] (features) -- (scanner);
+    \draw [->, line width=1.1pt] (scanner) -- (dashboard);
 \end{tikzpicture}
 \caption{Flujo general de procesamiento del Proyecto Júpiter.}
 \label{fig:arquitectura}
 \end{figure}
-
-\subsection{Procesamiento Espacial de 20 Micro-Zonas}
-A diferencia de los pronósticos generales que evalúan a toda la Región de Coquimbo como un único bloque, Proyecto Júpiter divide a La Serena en 20 micro-zonas geográficas independientes con coordenadas WGS84 de alta precisión, tales como Pueblo Islón ($-29.878^\circ, -71.218^\circ$) y Lambert ($-29.818^\circ, -71.148^\circ$).
 
 \section{Modelo de Inteligencia Artificial e Hidrología}
 
@@ -83,37 +100,16 @@ El núcleo predictivo se basa en un modelo de \textit{Random Forest Classifier} 
 
 \section{Simulación Operativa: Evento del Viernes 31 de Julio}
 
-Basado en el informe meteorológico para La Serena ($18.5\text{ mm}$ totales acumulados), la Figura~\ref{fig:linea_tiempo} resume cómo actuará el sistema durante la jornada.
-
-\begin{figure}[h!]
-\centering
-\begin{tikzpicture}[xscale=1.8, yscale=0.8]
-    % Linea temporal
-    \draw[->, thick] (0,0) -- (6.5,0) node[right] {Tiempo};
-    
-    % Hitos
-    \foreach \x/\h/\p/\text in {
-        0.5/05:00/0.9mm/Inicio de lluvia leve.,
-        1.5/08:00/0.5mm/Predicción del pico de 11:00.,
-        2.8/11:00/2.1mm/Primer pulso moderado.,
-        4.0/14:00/4.9mm/Emisión Alerta Máxima 17:00.,
-        5.2/17:00/5.4mm/Pico máximo del temporal.,
-        6.2/20:00/0.3mm/Inicio de Calma y Retorno.
-    } {
-        \draw[thick] (\x,0.1) -- (\x,-0.1) node[below] {\small \h};
-        \node[align=center, font=\scriptsize] at (\x, 1.2) {\textbf{\p}};
-        \node[align=center, font=\tiny, rotate=30, anchor=west] at (\x, 1.6) {\text};
-    }
-\end{tikzpicture}
-\caption{Línea de tiempo de procesamiento del modelo para el viernes 31 de julio.}
-\label{fig:linea_tiempo}
-\end{figure}
+Basado en el informe meteorológico para La Serena ($18.5\text{ mm}$ totales acumulados), se presenta el análisis detallado del comportamiento operativo durante la jornada.
 
 \subsection{Análisis de los Pulsos de Precipitación}
 
-\begin{table}[h!]
+La respuesta proyectada del modelo ante los principales pulsos de lluvia se resume en la Tabla~\ref{tab:pulsos}.
+
+\begin{table}[htbp]
 \centering
 \caption{Resumen de predicciones del modelo para el evento del 31 de julio.}
+\vspace{0.2cm}
 \begin{tabular}{@{}ccllc@{}}
 \toprule
 \textbf{Hora Pulso} & \textbf{Precipitación} & \textbf{Hora Emisión Alerta} & \textbf{Llegada del Pico} & \textbf{Hora de Paso Seguro} \\ \midrule
@@ -123,7 +119,40 @@ Basado en el informe meteorológico para La Serena ($18.5\text{ mm}$ totales acu
 \label{tab:pulsos}
 \end{table}
 
-Como se observa en la Tabla~\ref{tab:pulsos}, el pulso de las 17:00 hrs ($5.4\text{ mm}$) resulta ser el más crítico. Esto se debe a que la lluvia previa de la mañana ($12.8\text{ mm}$ acumulados hasta las 14:00 hrs) habrá saturado el terreno. Por ende, la precipitación de las 17:00 hrs se convertirá casi en su totalidad en agua acumulada en superficie ($Q$). El modelo emitirá la alerta a las 14:00 hrs, otorgando una ventana de 3 horas para el resguardo de la población.
+Como se observa en la Tabla~\ref{tab:pulsos}, el pulso de las 17:00 hrs ($5.4\text{ mm}$) resulta ser el más crítico del día. Esto se debe a que la lluvia previa de la mañana ($12.8\text{ mm}$ acumulados hasta las 14:00 hrs) habrá saturado el terreno. Por ende, la precipitación de las 17:00 hrs se convertirá casi en su totalidad en agua acumulada en superficie ($Q$). El modelo emitirá la alerta a las 14:00 hrs, otorgando una ventana de 3 horas para el resguardo de la población.
+
+La Figura~\ref{fig:linea_tiempo} resume la secuencia temporal completa.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[xscale=1.9, yscale=0.8, >=Stealth]
+    % Línea temporal
+    \draw[->, line width=1.2pt] (0,0) -- (6.6,0) node[right] {Tiempo};
+    
+    % Hitos temporales bien alineados
+    \foreach \x/\h/\p in {
+        0.5/05:00/0.9 mm,
+        1.5/08:00/0.5 mm,
+        2.8/11:00/2.1 mm,
+        4.0/14:00/4.9 mm,
+        5.2/17:00/5.4 mm,
+        6.2/20:00/0.3 mm
+    } {
+        \draw[line width=1.1pt] (\x,0.15) -- (\x,-0.15) node[below=2pt, font=\small] {\h};
+        \node[font=\small\bfseries] at (\x, 0.6) {\p};
+    }
+
+    % Anotaciones explicativas superiores
+    \node[font=\tiny, align=center] at (0.5, 1.3) {Lluvia inicial};
+    \node[font=\tiny, align=center] at (1.5, 1.3) {Alerta 11:00};
+    \node[font=\tiny, align=center] at (2.8, 1.3) {Primer pulso};
+    \node[font=\tiny, align=center] at (4.0, 1.3) {Alerta Máxima};
+    \node[font=\tiny, align=center] at (5.2, 1.3) {Pico del temporal};
+    \node[font=\tiny, align=center] at (6.2, 1.3) {Inicio Calma};
+\end{tikzpicture}
+\caption{Línea de tiempo de procesamiento del modelo para el viernes 31 de julio.}
+\label{fig:linea_tiempo}
+\end{figure}
 
 \section{Conclusiones y Sustento Técnico}
 
