@@ -2,10 +2,10 @@
 \usepackage[utf8]{inputenc}
 \usepackage[spanish,es-tabla]{babel}
 \usepackage[margin=2.2cm]{geometry}
+\usepackage{lmodern}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{caption}
-\usepackage{microtype}
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc}
 \usepackage{hyperref}
@@ -33,18 +33,20 @@ Investigador Principal --- Proyecto Júpiter}
 \maketitle
 
 \begin{abstract}
-El presente documento describe la arquitectura, el fundamento hidrológico y el funcionamiento operativo del \textbf{Proyecto Júpiter}, una plataforma predictiva de alerta temprana ante inundaciones y aluviones en la comuna de La Serena. El sistema integra telemetría satelital en tiempo casi real (NRT), un modelo de aprendizaje automático (\textit{Random Forest}) calibrado con física de suelos (método SCS-CN) y un escáner de 20 micro-zonas geográficas calibradas en coordenadas WGS84. Asimismo, se expone la simulación operativa para el evento meteorológico del viernes 31 de julio, detallando el cálculo anticipado de los picos de precipitación y la determinación de las ventanas de calma y retorno seguro.
+El presente documento describe la arquitectura, el fundamento hidrológico y el funcionamiento operativo del \textbf{Proyecto Júpiter}, una plataforma predictiva de alerta temprana ante inundaciones y aluviones en la comuna de La Serena. El sistema integra telemetría satelital en tiempo casi real (NRT), un modelo de aprendizaje automático (\textit{Random Forest}) calibrado con física de suelos (método SCS-CN) y un escáner de 20 micro-zonas geográficas calibradas en coordenadas WGS84. Asimismo, se expone la simulación operativa para el evento meteorológico del viernes 31 de julio de 2026, respaldada por datos del pronóstico oficial (DMC, SENAPRED, Meteored y AccuWeather), detallando la saturación antecedente del suelo ($178,0\text{ mm}$ acumulados), la elevación de la isoterma cero ($3.200$--$4.000\text{ m.s.n.m.}$), el cálculo anticipado de los picos de precipitación y la determinación de las ventanas de calma y retorno seguro.
 \end{abstract}
 
-\section{Introducción y Contexto}
+\section{Introducción y Contexto Sinóptico}
 
 El \textbf{Proyecto Júpiter} recibe su nombre en homenaje a \textit{Júpiter Pluvio}, deidad de la mitología romana asociada a las nubes y las lluvias propiciadoras de vida. La plataforma nace para resolver una vulnerabilidad histórica en la comuna de La Serena: la falta de sistemas de alerta con alta resolución espacial y capacidad de anticipación temporal.
 
-Las crecidas repentinas en quebradas precordilleranas (como Pueblo Islón, Lambert y Las Rojas) y los colapsos de colectores pluviales en la zona urbana ocurren debido a la interacción entre tres factores principales:
+De acuerdo con el reporte hidrometeorológico oficial, la cuenca baja del Río Elqui y la zona urbana de La Serena enfrentan la llegada de un sistema frontal frío impulsado por humedad tropical, interactuando con un territorio previamente saturado. La estación meteorológica La Florida registra un acumulado previo de $178,0\text{ mm}$, representando un superávit del $187,6\%$ respecto a la norma histórica ($61,9\text{ mm}$).
+
+Las crecidas repentinas en quebradas precordilleranas (Pueblo Islón, Lambert, Las Rojas) y los colapsos de colectores pluviales en la zona urbana ocurren debido a la interacción de tres factores críticos:
 \begin{enumerate}
-    \item Precipitación intensa acumulada en breves periodos.
-    \item Límite de nieve (isoterma cero) elevado en la cordillera, que impide la acumulación de nieve y transforma la precipitación en agua líquida sobre la roca.
-    \item Saturación previa del suelo, la cual elimina la capacidad de infiltración del terreno.
+    \item Precipitación intensa en breves periodos ($10,0$ a $20,0\text{ mm}$ estimados en la jornada).
+    \item Isoterma de 0\,°C elevada en la cordillera ($3.200$ a $4.000\text{ m.s.n.m.}$), la cual impide la congelación del agua y transforma la precipitación en escorrentía líquida sobre la roca.
+    \item Saturación previa extrema del suelo ($API_{72h}$ cercano al 100\% de capacidad), anulando la infiltración natural.
 \end{enumerate}
 
 \newpage
@@ -104,7 +106,7 @@ El núcleo predictivo se basa en un modelo de \textit{Random Forest Classifier} 
 
 \section{Simulación Operativa: Evento del Viernes 31 de Julio}
 
-Basado en el informe meteorológico para La Serena ($18.5\text{ mm}$ totales acumulados), se presenta el análisis detallado del comportamiento operativo durante la jornada.
+Basado en el consenso de los pronósticos de DMC, SENAPRED, Meteored y AccuWeather ($10,0$ a $20,0\text{ mm}$ acumulados y ráfagas de viento de hasta $50\text{ km/h}$ entre las 12:00 y las 18:00 hrs), se presenta el análisis del comportamiento del modelo.
 
 \subsection{Análisis de los Pulsos de Precipitación}
 
@@ -123,7 +125,7 @@ La respuesta proyectada del modelo ante los principales pulsos de lluvia se resu
 \label{tab:pulsos}
 \end{table}
 
-Como se observa en la Tabla~\ref{tab:pulsos}, el pulso de las 17:00 hrs ($5.4\text{ mm}$) resulta ser el más crítico del día. Esto se debe a que la lluvia previa de la mañana ($12.8\text{ mm}$ acumulados hasta las 14:00 hrs) habrá saturado el terreno. Por ende, la precipitación de las 17:00 hrs se convertirá casi en su totalidad en agua acumulada en superficie ($Q$). El modelo emitirá la alerta a las 14:00 hrs, otorgando una ventana de 3 horas para el resguardo de la población.
+Como se observa en la Tabla~\ref{tab:pulsos}, el pulso de las 17:00 hrs ($5.4\text{ mm}$) resulta ser el más crítico del día. Esto se debe a que la lluvia previa acumulada durante la mañana ($12.8\text{ mm}$ acumulados hasta las 14:00 hrs) sumada a los $178,0\text{ mm}$ antecedentes habrá saturado por completo el terreno. Por ende, la precipitación de las 17:00 hrs se convertirá casi en su totalidad en agua acumulada en superficie ($Q$). El modelo emitirá la alerta a las 14:00 hrs, otorgando una ventana de 3 horas para el resguardo de la población y el pre-posicionamiento de cuadrillas de Bomberos.
 
 La Figura~\ref{fig:linea_tiempo} resume la secuencia temporal completa.
 
@@ -160,11 +162,12 @@ La Figura~\ref{fig:linea_tiempo} resume la secuencia temporal completa.
 
 \section{Conclusiones y Sustento Técnico}
 
-El Proyecto Júpiter demuestra que es posible transicionar de un esquema de respuesta reactivo a un modelo de prevención predictiva. Mediante el uso de métricas claras como la \textbf{Llegada del Pico} y la \textbf{Hora de Paso Seguro (Calma)}, las autoridades de emergencia (Bomberos y COGRID) pueden tomar decisiones informadas, garantizando la seguridad de la comunidad en La Serena.
+El Proyecto Júpiter demuestra que es posible transicionar de un esquema de respuesta reactivo a un modelo de prevención predictiva. Frente a la vulnerabilidad habitacional de La Serena (más de 3.000 viviendas afectadas y 420 anegadas en temporales previos) y el riesgo de alta turbidez en las captaciones de agua potable de la Planta Las Rojas, el modelo otorga información clara como la \textbf{Llegada del Pico} y la \textbf{Hora de Paso Seguro (Calma)}, permitiendo a Bomberos y a la COGRID tomar decisiones oportunas.
 
 \begin{thebibliography}{9}
 \bibitem{usda1986} United States Department of Agriculture (USDA), \textit{Urban Hydrology for Small Watersheds}, Technical Release 55 (TR-55), 1986.
 \bibitem{breiman2001} L. Breiman, \textit{Random Forests}, Machine Learning, vol. 45, no. 1, pp. 5--32, 2001.
+\bibitem{dmc2026} Dirección Meteorológica de Chile (DMC), \textit{Aviso Meteorológico A364-3 / Alerta Preventiva Coquimbo}, 2026.
 \bibitem{openmeteo} Open-Meteo Weather API, \textit{Non-Real-Time Data Ingestion Protocol}, 2026.
 \end{thebibliography}
 
