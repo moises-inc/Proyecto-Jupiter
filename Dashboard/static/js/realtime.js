@@ -15,9 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(fetchLiveScanData, 5000);
 });
 
-/* Initialize Leaflet Map Centered at La Serena */
 function initMap() {
-  map = L.map('map').setView([-29.897, -71.220], 11);
+  map = L.map('map').setView([-29.900, -71.230], 11);
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
@@ -26,7 +25,6 @@ function initMap() {
   }).addTo(map);
 }
 
-/* Initialize Dual Y-Axis Trend Chart */
 function initChart() {
   const ctx = document.getElementById('trendChart').getContext('2d');
   trendChart = new Chart(ctx, {
@@ -91,7 +89,6 @@ function initChart() {
   });
 }
 
-/* Fetch Live Scan Data */
 async function fetchLiveScanData() {
   try {
     const response = await fetch('/api/scan');
@@ -102,7 +99,6 @@ async function fetchLiveScanData() {
   }
 }
 
-/* Render Dashboard */
 function renderLiveDashboard(data) {
   const bannerBox = document.getElementById('status-banner-box');
   const statusText = document.getElementById('commune-status-text');
@@ -115,10 +111,10 @@ function renderLiveDashboard(data) {
   bannerBox.className = 'status-banner';
   if (data.commune_status.includes('ROJA')) {
     bannerBox.classList.add('banner-rojo');
-    summarySubtext.innerText = '🚨 ALERTA MÁXIMA DE DESBORDE Y ALUVIÓN: Activar evacuación preventiva inmediata.';
+    summarySubtext.innerText = 'ALERTA MÁXIMA DE DESBORDE Y ALUVIÓN: Activar evacuación preventiva inmediata.';
   } else if (data.commune_status.includes('AMARILLA')) {
     bannerBox.classList.add('banner-amarillo');
-    summarySubtext.innerText = '⚠️ PRE-ALERTA Y MONITOREO ACTIVO: Preparar Puestos de Mando en La Serena.';
+    summarySubtext.innerText = 'PRE-ALERTA Y MONITOREO ACTIVO: Preparar Puestos de Mando en La Serena.';
   } else {
     bannerBox.classList.add('banner-verde');
     summarySubtext.innerText = 'Monitoreo satelital activo NRT sin riesgo inminente de desborde hidrológico.';
@@ -147,9 +143,12 @@ function renderLiveDashboard(data) {
     card.innerHTML = `
       <div>
         <div class="sector-name">${s.name}</div>
-        <div class="sector-vulnerability">${s.type} • Cota ${s.elevation_m}m • ${s.vulnerability}</div>
+        <div class="sector-vulnerability"><strong>Peligro:</strong> ${s.disaster_type}</div>
+        <div class="sector-vulnerability" style="color: var(--brand-blue); margin-top: 2px;">
+          <strong>ETA Impacto:</strong> ${s.eta_impact} (Tc: ${s.concentration_time_hours}h) • Cota ${s.elevation_m}m
+        </div>
       </div>
-      <span class="sector-badge ${badgeClass}">${s.semaforo.split('-')[0].trim()} (${s.score_pct}%)</span>
+      <span class="sector-badge ${badgeClass}">${s.semaforo} (${s.score_pct}%)</span>
     `;
     sectorContainer.appendChild(card);
 
@@ -166,7 +165,6 @@ function renderLiveDashboard(data) {
   }
 }
 
-/* Update Map Markers */
 function updateMapMarker(sector) {
   const coords = [sector.coordinates.lat, sector.coordinates.lon];
   let color = '#2ECC71';
@@ -176,16 +174,17 @@ function updateMapMarker(sector) {
   if (sectorMarkers[sector.key]) map.removeLayer(sectorMarkers[sector.key]);
 
   const circle = L.circleMarker(coords, {
-    radius: 14, fillColor: color, color: '#FFFFFF', weight: 2, opacity: 1, fillOpacity: 0.85
+    radius: 12, fillColor: color, color: '#FFFFFF', weight: 2, opacity: 1, fillOpacity: 0.85
   }).addTo(map);
 
   circle.bindPopup(`
-    <div style="color: #070C18; font-family: sans-serif; min-width: 200px;">
+    <div style="color: #070C18; font-family: sans-serif; min-width: 220px;">
       <strong style="font-size: 1rem;">${sector.name}</strong><br>
       <hr style="margin: 4px 0;">
       <b>Estado:</b> ${sector.semaforo}<br>
       <b>Riesgo ML:</b> ${sector.score_pct}%<br>
-      <b>Vulnerabilidad:</b> ${sector.vulnerability}<br>
+      <b>Peligro:</b> ${sector.disaster_type}<br>
+      <b>ETA Impacto:</b> ${sector.eta_impact}<br>
       <b>Elevación:</b> ${sector.elevation_m} m.n.m.
     </div>
   `);
@@ -193,7 +192,6 @@ function updateMapMarker(sector) {
   sectorMarkers[sector.key] = circle;
 }
 
-/* Render Tactical Actions */
 function renderTacticalActions(data) {
   const container = document.getElementById('tactical-actions-list');
   container.innerHTML = '';
@@ -206,8 +204,8 @@ function renderTacticalActions(data) {
       const item = document.createElement('div');
       item.className = 'action-item danger';
       item.innerHTML = `
-        <div class="action-title">🚨 ORDEN DE EVACUACIÓN Y ALERTA PREVENTIVA: ${s.name}</div>
-        <div class="action-desc">Riesgo ML al ${s.score_pct}%. Despachar cuadrillas de Bomberos y avisar a comunidad por PWA/SAE antes del pico de escorrentía.</div>
+        <div class="action-title">ORDEN DE EVACUACIÓN Y ALERTA PREVENTIVA: ${s.name}</div>
+        <div class="action-desc">Riesgo ML al ${s.score_pct}%. Peligro: ${s.disaster_type}. ETA Estimado de Impacto: ${s.eta_impact}. Despachar cuadrillas de Bomberos inmediatamente.</div>
       `;
       container.appendChild(item);
     });
@@ -218,8 +216,8 @@ function renderTacticalActions(data) {
       const item = document.createElement('div');
       item.className = 'action-item warning';
       item.innerHTML = `
-        <div class="action-title">⚠️ PRE-POSICIONAR RECURSOS: ${s.name}</div>
-        <div class="action-desc">Riesgo en incremento (${s.score_pct}%). Monitorear pasadas de ríos y preparar equipos de rescate acuático.</div>
+        <div class="action-title">PRE-POSICIONAR RECURSOS: ${s.name}</div>
+        <div class="action-desc">Riesgo en incremento (${s.score_pct}%). Peligro: ${s.disaster_type}. ETA Impacto: ${s.eta_impact}. Monitorear cauces.</div>
       `;
       container.appendChild(item);
     });
@@ -228,7 +226,7 @@ function renderTacticalActions(data) {
   if (redSectors.length === 0 && yellowSectors.length === 0) {
     container.innerHTML = `
       <div class="action-item">
-        <div class="action-title">✅ CONDICIONES NORMALES DE MONITOREO</div>
+        <div class="action-title">CONDICIONES NORMALES DE MONITOREO</div>
         <div class="action-desc">No se requieren acciones tácticas de emergencia. Próximo escaneo automático NRT en 5 segundos.</div>
       </div>
     `;

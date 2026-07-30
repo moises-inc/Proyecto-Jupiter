@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initMap() {
-  map = L.map('map').setView([-29.897, -71.220], 11);
+  map = L.map('map').setView([-29.900, -71.230], 11);
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
@@ -110,10 +110,10 @@ function renderDemoDashboard(data) {
   bannerBox.className = 'status-banner';
   if (data.commune_status.includes('ROJA')) {
     bannerBox.classList.add('banner-rojo');
-    summarySubtext.innerText = '🚨 SIMULACIÓN: ALERTA ROJA POR ALUVIÓN Y DESBORDE (Temporal 19 de Julio 2026).';
+    summarySubtext.innerText = 'SIMULACIÓN: ALERTA ROJA POR ALUVIÓN Y DESBORDE (Temporal 19 de Julio 2026).';
   } else if (data.commune_status.includes('AMARILLA')) {
     bannerBox.classList.add('banner-amarillo');
-    summarySubtext.innerText = '⚠️ SIMULACIÓN: PRE-ALERTA Y LLUVIAS MODERADAS (Preparación de Recursos).';
+    summarySubtext.innerText = 'SIMULACIÓN: PRE-ALERTA Y LLUVIAS MODERADAS (Preparación de Recursos).';
   } else {
     bannerBox.classList.add('banner-verde');
     summarySubtext.innerText = 'SIMULACIÓN: Día normal sin precipitaciones ni riesgo hidrológico.';
@@ -142,9 +142,12 @@ function renderDemoDashboard(data) {
     card.innerHTML = `
       <div>
         <div class="sector-name">${s.name}</div>
-        <div class="sector-vulnerability">${s.type} • Cota ${s.elevation_m}m • ${s.vulnerability}</div>
+        <div class="sector-vulnerability"><strong>Peligro:</strong> ${s.disaster_type}</div>
+        <div class="sector-vulnerability" style="color: var(--brand-blue); margin-top: 2px;">
+          <strong>ETA Impacto:</strong> ${s.eta_impact} (Tc: ${s.concentration_time_hours}h) • Cota ${s.elevation_m}m
+        </div>
       </div>
-      <span class="sector-badge ${badgeClass}">${s.semaforo.split('-')[0].trim()} (${s.score_pct}%)</span>
+      <span class="sector-badge ${badgeClass}">${s.semaforo} (${s.score_pct}%)</span>
     `;
     sectorContainer.appendChild(card);
 
@@ -170,16 +173,17 @@ function updateMapMarker(sector) {
   if (sectorMarkers[sector.key]) map.removeLayer(sectorMarkers[sector.key]);
 
   const circle = L.circleMarker(coords, {
-    radius: 14, fillColor: color, color: '#FFFFFF', weight: 2, opacity: 1, fillOpacity: 0.85
+    radius: 12, fillColor: color, color: '#FFFFFF', weight: 2, opacity: 1, fillOpacity: 0.85
   }).addTo(map);
 
   circle.bindPopup(`
-    <div style="color: #070C18; font-family: sans-serif; min-width: 200px;">
+    <div style="color: #070C18; font-family: sans-serif; min-width: 220px;">
       <strong style="font-size: 1rem;">${sector.name}</strong><br>
       <hr style="margin: 4px 0;">
       <b>Estado:</b> ${sector.semaforo}<br>
       <b>Riesgo ML:</b> ${sector.score_pct}%<br>
-      <b>Vulnerabilidad:</b> ${sector.vulnerability}<br>
+      <b>Peligro:</b> ${sector.disaster_type}<br>
+      <b>ETA Impacto:</b> ${sector.eta_impact}<br>
       <b>Elevación:</b> ${sector.elevation_m} m.n.m.
     </div>
   `);
@@ -199,8 +203,8 @@ function renderTacticalActions(data) {
       const item = document.createElement('div');
       item.className = 'action-item danger';
       item.innerHTML = `
-        <div class="action-title">🚨 SIMULACIÓN: ORDEN DE EVACUACIÓN (${s.name})</div>
-        <div class="action-desc">Riesgo ML al ${s.score_pct}%. Proyectado aluvión y anegamiento crítico.</div>
+        <div class="action-title">SIMULACIÓN: ORDEN DE EVACUACIÓN (${s.name})</div>
+        <div class="action-desc">Riesgo ML al ${s.score_pct}%. Peligro: ${s.disaster_type}. ETA Impacto: ${s.eta_impact}. Proyectado aluvión y anegamiento crítico.</div>
       `;
       container.appendChild(item);
     });
@@ -211,8 +215,8 @@ function renderTacticalActions(data) {
       const item = document.createElement('div');
       item.className = 'action-item warning';
       item.innerHTML = `
-        <div class="action-title">⚠️ SIMULACIÓN: PRE-POSICIONAR RECURSOS (${s.name})</div>
-        <div class="action-desc">Riesgo en incremento (${s.score_pct}%). Monitorear cauces.</div>
+        <div class="action-title">SIMULACIÓN: PRE-POSICIONAR RECURSOS (${s.name})</div>
+        <div class="action-desc">Riesgo en incremento (${s.score_pct}%). Peligro: ${s.disaster_type}. ETA Impacto: ${s.eta_impact}. Monitorear cauces.</div>
       `;
       container.appendChild(item);
     });
@@ -221,7 +225,7 @@ function renderTacticalActions(data) {
   if (redSectors.length === 0 && yellowSectors.length === 0) {
     container.innerHTML = `
       <div class="action-item">
-        <div class="action-title">✅ CONDICIONES NORMALES EN SIMULACIÓN</div>
+        <div class="action-title">CONDICIONES NORMALES EN SIMULACIÓN</div>
         <div class="action-desc">No hay alertas de desborde hidrológico en este escenario.</div>
       </div>
     `;

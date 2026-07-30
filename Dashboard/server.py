@@ -113,7 +113,7 @@ def get_bulletin():
 @app.get("/api/simulate-storm", response_class=JSONResponse)
 def simulate_storm(severity: str = Query("extreme", description="normal, moderate, extreme")):
     """
-    Simulates a storm event (e.g. July 19 2026 extreme storm) for live testing.
+    Simulates a storm event (e.g. July 19 2026 extreme storm) for live testing across 14 sectors.
     """
     if severity == "extreme":
         rain_24h = 85.0
@@ -134,6 +134,8 @@ def simulate_storm(severity: str = Query("extreme", description="normal, moderat
         freezing = 2200.0
         high_freezing = 0
 
+    base_time = pd.to_datetime("2026-07-19 18:00:00")
+
     scanned_sectors = []
     red_count = 0
     yellow_count = 0
@@ -149,21 +151,27 @@ def simulate_storm(severity: str = Query("extreme", description="normal, moderat
         score = min(1.0, base_score * water_presence * freezing_factor) if water_presence > 0.01 else 0.0
         score_pct = round(score * 100.0, 1)
 
+        tc_hours = info["concentration_time_hours"]
+        eta_time = base_time + pd.Timedelta(hours=tc_hours)
+        eta_formatted = eta_time.strftime("%H:%M hrs")
+
         if score >= 0.7:
-            semaforo = "🔴 ALERTA ROJA"
+            semaforo = "ALERTA ROJA"
             red_count += 1
         elif score >= 0.4:
-            semaforo = "🟡 ALERTA AMARILLA"
+            semaforo = "ALERTA AMARILLA"
             yellow_count += 1
         else:
-            semaforo = "🟢 VERDE ESTABLE"
+            semaforo = "VERDE ESTABLE"
 
         scanned_sectors.append({
             "key": key,
             "name": info["name"],
             "type": info["type"],
             "elevation_m": info["elevation_m"],
-            "vulnerability": info["vulnerability_type"],
+            "disaster_type": info["disaster_type"],
+            "concentration_time_hours": tc_hours,
+            "eta_impact": eta_formatted,
             "score_pct": score_pct,
             "semaforo": semaforo,
             "coordinates": {"lat": info["lat"], "lon": info["lon"]}
@@ -172,11 +180,11 @@ def simulate_storm(severity: str = Query("extreme", description="normal, moderat
     scanned_sectors.sort(key=lambda x: x["score_pct"], reverse=True)
 
     if red_count > 0:
-        commune_status = "🔴 ALERTA ROJA COMUNAL (EVACUACIÓN / RESCATE PREVENTIVO ACTIVO)"
+        commune_status = "ALERTA ROJA COMUNAL (EVACUACIÓN Y RESCATE PREVENTIVO ACTIVO)"
     elif yellow_count > 0:
-        commune_status = "🟡 ALERTA AMARILLA COMUNAL (PREPARACIÓN DE PUESTOS DE MANDO)"
+        commune_status = "ALERTA AMARILLA COMUNAL (PREPARACIÓN DE PUESTOS DE MANDO)"
     else:
-        commune_status = "🟢 ALERTA VERDE COMUNAL (CONDICIONES ESTABLES)"
+        commune_status = "ALERTA VERDE COMUNAL (CONDICIONES ESTABLES)"
 
     hours = [f"{h:02d}:00" for h in range(0, 25, 4)]
     if severity == "extreme":
