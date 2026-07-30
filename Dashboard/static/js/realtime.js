@@ -8,13 +8,10 @@ let trendChart;
 let isInitialBoundsSet = false;
 
 // Layer Toggles & Audio State
-let radarLayerGroup = null;
-let isRadarActive = false;
 let evacuationGroup = null;
 let isEvacuationActive = false;
 let isAudioAlarmEnabled = false;
 let audioCtx = null;
-let radarLegendControl = null;
 
 let sciLogEntries = [
   { timestamp: "21:00 hrs", sector: "Pueblo Islón / Quebrada Santa Gracia", user: "Mando Bomberos 1", severity: "Estable", desc: "Inicio de guardia NRT. Sin precipitaciones en cuenca precordillerana." }
@@ -79,76 +76,7 @@ function toggleEvacuationRoutes() {
   }
 }
 
-/* Punto 4: Capa de Radar Satelital NRT de Precipitaciones con Reflectividad Directa */
-async function toggleRadarLayer() {
-  isRadarActive = !isRadarActive;
-  const mapContainer = document.getElementById('map-box');
 
-  if (isRadarActive) {
-    if (!radarLayerGroup) {
-      radarLayerGroup = L.layerGroup();
-      
-      // Dynamic RainViewer Tile Layer
-      try {
-        const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-        const apiData = await res.json();
-        const host = apiData.host || 'https://tilecache.rainviewer.com';
-        const radarTimes = apiData.radar ? (apiData.radar.past || apiData.radar.nowcast) : [];
-        const latestPath = radarTimes.length > 0 ? radarTimes[radarTimes.length - 1].path : '/v2/radar/nowcast';
-        const tileUrl = `${host}${latestPath}/256/{z}/{x}/{y}/2/1_1.png`;
-
-        const tileLayer = L.tileLayer(tileUrl, {
-          opacity: 0.65,
-          maxNativeZoom: 12,
-          maxZoom: 19,
-          attribution: '&copy; RainViewer Weather Radar NRT'
-        });
-        radarLayerGroup.addLayer(tileLayer);
-      } catch (e) {
-        console.warn('Fallback dynamic radar layer active');
-      }
-
-      // Add NRT Reflectivity cloud circles over active sectors to ensure 100% visible radar coverage
-      Object.keys(sectorMarkers).forEach(key => {
-        const s = sectorMarkers[key];
-        const radarPulse = L.circle(s.coords, {
-          radius: (s.radius_m || 1000) * 1.4,
-          color: 'rgba(0, 210, 255, 0.4)',
-          weight: 2,
-          fillColor: 'rgba(0, 210, 255, 0.12)',
-          fillOpacity: 0.25,
-          dashArray: '3, 6'
-        });
-        radarLayerGroup.addLayer(radarPulse);
-      });
-    }
-
-    radarLayerGroup.addTo(map);
-
-    // Show floating radar legend
-    let legend = document.getElementById('radar-legend-badge');
-    if (!legend) {
-      legend = document.createElement('div');
-      legend.id = 'radar-legend-badge';
-      legend.className = 'radar-legend';
-      legend.innerHTML = `
-        <span style="font-weight: 700; color: #00D2FF;">📡 Radar Reflectividad NRT:</span>
-        <div style="display:flex; align-items:center; gap:3px; font-size:0.7rem;">
-          <span style="background:#0288D1; padding:2px 5px; border-radius:3px;">10 dBZ (Llovizna)</span>
-          <span style="background:#FBC02D; color:#000; padding:2px 5px; border-radius:3px;">35 dBZ (Moderada)</span>
-          <span style="background:#D32F2F; padding:2px 5px; border-radius:3px;">>50 dBZ (Fuerte)</span>
-        </div>
-      `;
-      document.getElementById('map').appendChild(legend);
-    }
-    legend.style.display = 'flex';
-
-  } else {
-    if (radarLayerGroup) map.removeLayer(radarLayerGroup);
-    const legend = document.getElementById('radar-legend-badge');
-    if (legend) legend.style.display = 'none';
-  }
-}
 
 /* Punto 3: Alarma Sonora Táctica */
 function toggleAudioAlarm() {
