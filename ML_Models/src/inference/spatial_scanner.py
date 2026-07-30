@@ -485,13 +485,23 @@ def scan_full_la_serena_grid() -> dict:
         tc_hours = info["concentration_time_hours"]
         drain_hours = info.get("recovery_drain_hours", 2.0)
 
-        eta_impact = current_dt + pd.Timedelta(hours=tc_hours)
-        eta_impact_formatted = eta_impact.strftime("%d/%m/%Y %H:%M hrs")
-
-        # ETA of Safe Return (Calma / Transitabilidad Seguro)
-        total_recovery_hours = tc_hours + drain_hours
-        eta_safe_return = current_dt + pd.Timedelta(hours=total_recovery_hours)
-        eta_safe_formatted = eta_safe_return.strftime("%d/%m/%Y %H:%M hrs")
+        # Dynamic Peak Forecast Scanning across Multi-Model Weather Ensemble
+        future_df = features_df[features_df["time"] >= current_dt]
+        if not future_df.empty and future_df["precipitation"].max() > 0.5:
+            peak_idx = future_df["precipitation"].idxmax()
+            peak_forecast_dt = pd.to_datetime(future_df.loc[peak_idx, "time"])
+            eta_impact = peak_forecast_dt + pd.Timedelta(hours=tc_hours)
+            eta_impact_formatted = eta_impact.strftime("%d/%m/%Y %H:%M hrs")
+            eta_safe_return = eta_impact + pd.Timedelta(hours=drain_hours)
+            eta_safe_formatted = eta_safe_return.strftime("%d/%m/%Y %H:%M hrs")
+        elif score > 0.3:
+            eta_impact = current_dt + pd.Timedelta(hours=tc_hours)
+            eta_impact_formatted = eta_impact.strftime("%d/%m/%Y %H:%M hrs")
+            eta_safe_return = eta_impact + pd.Timedelta(hours=drain_hours)
+            eta_safe_formatted = eta_safe_return.strftime("%d/%m/%Y %H:%M hrs")
+        else:
+            eta_impact_formatted = "Sin Lluvia Prevista"
+            eta_safe_formatted = "Condición Estable (Transitable)"
 
         if score >= 0.7:
             semaforo = "ALERTA ROJA"

@@ -1,6 +1,7 @@
 """
-Proyecto Júpiter - Satellite Data Ingestion Module
-Retrieves NRT and historical satellite/meteorological data for La Serena cuencas.
+Proyecto Júpiter - Multi-Source Weather & Satellite Data Ingestion Module
+Retrieves NRT satellite telemetry and Multi-Model Ensemble Forecasts (ECMWF, GFS, ICON)
+for La Serena cuencas.
 Coordinates: Lat -29.897, Lon -71.253 (La Serena / Valle del Elqui).
 """
 
@@ -110,7 +111,8 @@ def fetch_live_nrt_data(
     lon: float = LA_SERENA_LON
 ) -> pd.DataFrame:
     """
-    Fetches NRT (Near Real-Time) forecast and recent satellite data for live monitoring.
+    Fetches Multi-Source NRT forecast and satellite data, blending multi-provider
+    weather models (ECMWF, GFS, ICON) into an ensemble forecast for La Serena.
     """
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
@@ -118,6 +120,7 @@ def fetch_live_nrt_data(
         "longitude": lon,
         "past_days": 5,
         "forecast_days": 2,
+        "models": "ecmwf_ifs025,gfs_seamless,icon_seamless",
         "hourly": [
             "precipitation",
             "rain",
@@ -136,20 +139,59 @@ def fetch_live_nrt_data(
         data = response.json()
 
         if "hourly" in data:
-            df = pd.DataFrame(data["hourly"])
-            df["time"] = pd.to_datetime(df["time"])
+            h = data["hourly"]
+            times = pd.to_datetime(h["time"])
+
+            p_ec = np.array(h.get("precipitation_ecmwf_ifs025", [0.0]*len(times)))
+            p_gf = np.array(h.get("precipitation_gfs_seamless", [0.0]*len(times)))
+            p_ic = np.array(h.get("precipitation_icon_seamless", [0.0]*len(times)))
+
+            # Multi-Model Ensemble Consensus (Average and Peak Forecast Vector)
+            p_ensemble = (p_ec + p_gf + p_ic) / 3.0
+            p_max_ensemble = np.maximum.reduce([p_ec, p_gf, p_ic])
+
+            t_ec = np.array(h.get("temperature_2m_ecmwf_ifs025", [14.0]*len(times)))
+            rh_ec = np.array(h.get("relative_humidity_2m_ecmwf_ifs025", [75.0]*len(times)))
+            sp_ec = np.array(h.get("surface_pressure_ecmwf_ifs025", [1013.0]*len(times)))
+            ws_ec = np.array(h.get("wind_speed_10m_ecmwf_ifs025", [12.0]*len(times)))
+            fz_ec = np.array(h.get("freezing_level_height_ecmwf_ifs025", [2600.0]*len(times)))
+
+            df = pd.DataFrame({
+                "time": times,
+                "precipitation": p_ensemble,
+                "rain": p_ensemble,
+                "precip_max_ensemble": p_max_ensemble,
+                "temperature_2m": t_ec,
+                "relative_humidity_2m": rh_ec,
+                "surface_pressure": sp_ec,
+                "wind_speed_10m": ws_ec,
+                "freezing_level_height": fz_ec
+            })
             return df
         else:
             today_str = datetime.datetime.now().strftime("%Y-%m-%d")
             return generate_offline_fallback_data(today_str, today_str)
     except Exception as e:
-        print(f"Notice: Live NRT API request failed ({e}). Utilizing offline NRT fallback.")
-        today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-        return generate_offline_fallback_data(today_str, today_str)
+        print(f"Notice: Multi-source weather API request failed ({e}). Falling back to single-model forecast.")
+        # Single model fallback
+        try:
+            fallback_params = {
+                "latitude": lat, "longitude": lon, "past_days": 5, "forecast_days": 2,
+                "hourly": ["precipitation", "rain", "temperature_2m", "relative_humidity_2m", "surface_pressure", "wind_speed_10m", "freezing_level_height"],
+                "timezone": "America/Santiago"
+            }
+            r = requests.get(url, params=fallback_params, timeout=10)
+            r.raise_for_status()
+            df = pd.DataFrame(r.json()["hourly"])
+            df["time"] = pd.to_datetime(df["time"])
+            return df
+        except Exception:
+            today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+            return generate_offline_fallback_data(today_str, today_str)
 
 
 if __name__ == "__main__":
-    print("Testing live satellite data ingestion for La Serena...")
+    print("Testing multi-source weather data ingestion (ECMWF, GFS, ICON) for La Serena...")
     df = fetch_live_nrt_data()
-    print(f"Ingested {len(df)} live records. Latest time: {df['time'].iloc[-1]}")
+    print(f"Ingested {len(df)} multi-model records. Latest time: {df['time'].iloc[-1]}")
     print(df.tail())
