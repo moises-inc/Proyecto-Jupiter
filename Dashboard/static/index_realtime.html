@@ -88,7 +88,12 @@
       <div class="card-box" id="map-box">
         <div class="box-header">
           <div class="box-title">Mapa Táctico de Conciencia Situacional (La Serena)</div>
-          <span class="timestamp-tag">14 Zonas Geográficas Escaneadas</span>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <select id="sector-focus-select" class="btn-action" style="background: rgba(13, 22, 41, 0.9); border: 1px solid var(--card-border); color: var(--text-primary);" onchange="focusSectorFromSelect(this.value)">
+              <option value="">-- Enfocar Sector --</option>
+            </select>
+            <span class="timestamp-tag">20 Zonas Geográficas Escaneadas</span>
+          </div>
         </div>
         <div id="map"></div>
       </div>

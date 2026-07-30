@@ -1,10 +1,11 @@
 /* ==========================================================================
-   Proyecto Centinela — Dashboard Operacional En Vivo NRT (realtime.js)
+   Proyecto Centinela — Dashboard Operacional En Vivo NRT (realtime.js v2.5)
    ========================================================================== */
 
 let map;
 let sectorMarkers = {};
 let trendChart;
+let isInitialBoundsSet = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
@@ -16,7 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initMap() {
-  map = L.map('map').setView([-29.900, -71.230], 11);
+  // Default fallback center
+  map = L.map('map').setView([-29.900, -71.210], 11);
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
@@ -132,9 +134,23 @@ function renderLiveDashboard(data) {
   const sectorContainer = document.getElementById('sector-grid-list');
   sectorContainer.innerHTML = '';
 
+  const selectDropdown = document.getElementById('sector-focus-select');
+  if (selectDropdown && selectDropdown.options.length <= 1) {
+    data.sectors.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.key;
+      opt.innerText = s.name;
+      selectDropdown.appendChild(opt);
+    });
+  }
+
+  const coverageGroup = [];
+
   data.sectors.forEach(s => {
     const card = document.createElement('div');
     card.className = 'sector-card';
+    card.style.cursor = 'pointer';
+    card.onclick = () => focusSectorFromKey(s.key);
 
     let badgeClass = 'badge-verde';
     if (s.semaforo.includes('ROJA')) badgeClass = 'badge-rojo';
@@ -152,8 +168,16 @@ function renderLiveDashboard(data) {
     `;
     sectorContainer.appendChild(card);
 
-    updateMapMarker(s);
+    const layerPair = updateMapMarker(s);
+    if (layerPair) coverageGroup.push(layerPair.circle);
   });
+
+  // Automatically fit map bounds on first scan load
+  if (!isInitialBoundsSet && coverageGroup.length > 0) {
+    const featureGroup = L.featureGroup(coverageGroup);
+    map.fitBounds(featureGroup.getBounds().pad(0.08));
+    isInitialBoundsSet = true;
+  }
 
   renderTacticalActions(data);
 
@@ -182,7 +206,6 @@ function updateMapMarker(sector) {
     map.removeLayer(sectorMarkers[sector.key].marker);
   }
 
-  // 1. Draw Continuous Spatial Coverage Zone Circle
   const coverageZone = L.circle(coords, {
     radius: sector.radius_m || 1000,
     color: color,
@@ -192,7 +215,6 @@ function updateMapMarker(sector) {
     dashArray: '4, 4'
   }).addTo(map);
 
-  // 2. Draw Center Tactical Marker
   const centerMarker = L.circleMarker(coords, {
     radius: 7,
     fillColor: color,
@@ -217,7 +239,20 @@ function updateMapMarker(sector) {
   coverageZone.bindPopup(popupContent);
   centerMarker.bindPopup(popupContent);
 
-  sectorMarkers[sector.key] = { circle: coverageZone, marker: centerMarker };
+  sectorMarkers[sector.key] = { circle: coverageZone, marker: centerMarker, coords: coords };
+  return sectorMarkers[sector.key];
+}
+
+function focusSectorFromSelect(sectorKey) {
+  if (sectorKey) focusSectorFromKey(sectorKey);
+}
+
+function focusSectorFromKey(sectorKey) {
+  if (sectorMarkers[sectorKey]) {
+    const s = sectorMarkers[sectorKey];
+    map.flyTo(s.coords, 14, { duration: 1.2 });
+    s.marker.openPopup();
+  }
 }
 
 function renderTacticalActions(data) {
