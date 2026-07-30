@@ -196,7 +196,7 @@ function initChart() {
           tension: 0.3
         },
         {
-          label: 'Isoterma Cero (m.n.m.)',
+          label: 'Límite de Nieve (Cordillera)',
           yAxisID: 'yFreezing',
           data: [2200, 2200, 2200, 2200, 2200, 2200, 2200],
           borderColor: '#F1C40F',
@@ -222,7 +222,7 @@ function initChart() {
         },
         yFreezing: {
           type: 'linear', position: 'right', min: 1000, max: 5000,
-          title: { display: true, text: 'Isoterma (m)', color: '#F1C40F', font: { weight: 'bold' } },
+          title: { display: true, text: 'Límite de Nieve (m)', color: '#F1C40F', font: { weight: 'bold' } },
           ticks: { color: '#F1C40F', callback: v => v + 'm' },
           grid: { drawOnChartArea: false }
         }
@@ -303,7 +303,7 @@ function renderDemoDashboard(data) {
         <div class="sector-name">${s.name}</div>
         <div class="sector-vulnerability"><strong>Peligro:</strong> ${s.disaster_type}</div>
         <div class="sector-vulnerability" style="color: var(--brand-blue); margin-top: 2px;">
-          <strong>ETA Pico:</strong> ${s.eta_impact} (Tc: ${s.concentration_time_hours}h) • <strong style="color: #2ECC71;">Retorno Seguro:</strong> ${s.eta_safe_return || '17:00 hrs'}
+          <strong>Llegada del Pico:</strong> ${s.eta_impact} (Tiempo de Avance: ${s.concentration_time_hours} horas) • <strong style="color: #2ECC71;">Hora de Paso Seguro (Calma):</strong> ${s.eta_safe_return || '17:00 hrs'}
         </div>
       </div>
       <span class="sector-badge ${badgeClass}">${s.semaforo} (${s.score_pct}%)</span>
@@ -371,8 +371,8 @@ function updateMapMarker(sector) {
       <hr style="margin: 4px 0; border: 0; border-top: 1px solid #ccc;">
       <b>Estado:</b> ${sector.semaforo}<br>
       <b>Riesgo ML:</b> ${sector.score_pct}%<br>
-      <b>ETA Pico Inundación:</b> ${sector.eta_impact} (Tc: ${sector.concentration_time_hours}h)<br>
-      <b style="color: #2E7D32;">ETA Retorno Seguro:</b> ${sector.eta_safe_return || '17:00 hrs'}<br>
+      <b>Llegada del Pico Inundación:</b> ${sector.eta_impact} (Tiempo de Avance: ${sector.concentration_time_hours} horas)<br>
+      <b style="color: #2E7D32;">Hora de Paso Seguro (Calma):</b> ${sector.eta_safe_return || '17:00 hrs'}<br>
       <b>Transitabilidad:</b> ${sector.transitability_status || 'TRANSITABLE'}<br>
       <b>Radio Cobertura:</b> ${sector.radius_m}m • <b>Cota:</b> ${sector.elevation_m} m.n.m.
     </div>
@@ -410,7 +410,7 @@ function renderTacticalActions(data) {
       item.className = 'action-item danger';
       item.innerHTML = `
         <div class="action-title">SIMULACIÓN: ORDEN DE EVACUACIÓN (${s.name})</div>
-        <div class="action-desc">Riesgo ML al ${s.score_pct}%. Peligro: ${s.disaster_type}. ETA Impacto: ${s.eta_impact}. Proyectado aluvión y anegamiento crítico.</div>
+        <div class="action-desc">Riesgo ML al ${s.score_pct}%. Peligro: ${s.disaster_type}. Llegada del Pico: ${s.eta_impact}. Proyectado aluvión y anegamiento crítico.</div>
       `;
       container.appendChild(item);
     });
@@ -422,7 +422,7 @@ function renderTacticalActions(data) {
       item.className = 'action-item warning';
       item.innerHTML = `
         <div class="action-title">SIMULACIÓN: PRE-POSICIONAR RECURSOS (${s.name})</div>
-        <div class="action-desc">Riesgo en incremento (${s.score_pct}%). Peligro: ${s.disaster_type}. ETA Impacto: ${s.eta_impact}. Monitorear cauces.</div>
+        <div class="action-desc">Riesgo en incremento (${s.score_pct}%). Peligro: ${s.disaster_type}. Llegada del Pico: ${s.eta_impact}. Monitorear cauces.</div>
       `;
       container.appendChild(item);
     });

@@ -326,11 +326,11 @@ def scan_full_la_serena_grid() -> dict:
 
         if score >= 0.7:
             semaforo = "ALERTA ROJA"
-            transitability = f"TRANSITO RESTRICTORIO (Retorno Seguro: {eta_safe_formatted})"
+            transitability = f"TRANSITO RESTRICTORIO (Hora de Paso Seguro (Calma): {eta_safe_formatted})"
             red_count += 1
         elif score >= 0.4:
             semaforo = "ALERTA AMARILLA"
-            transitability = f"PRECAUCIÓN VIAL (Retorno Seguro: {eta_safe_formatted})"
+            transitability = f"PRECAUCIÓN VIAL (Hora de Paso Seguro (Calma): {eta_safe_formatted})"
             yellow_count += 1
         else:
             semaforo = "VERDE ESTABLE"
@@ -349,7 +349,7 @@ def scan_full_la_serena_grid() -> dict:
             "eta_safe_return": eta_safe_formatted,
             "transitability_status": transitability,
             "scs_curve_number": cn,
-            "direct_runoff_Q": round(direct_Q, 2),
+            "agua_acumulada_superficie": round(direct_Q, 2),
             "forecast_1h": round(forecast_1h, 1),
             "forecast_3h": round(forecast_3h, 1),
             "forecast_6h": round(forecast_6h, 1),
@@ -388,4 +388,4 @@ if __name__ == "__main__":
     print(f"Total Sectors: {scan['total_sectors_scanned']}")
     print("\nTop 3 Risk Sectors:")
     for s in scan['sectors'][:3]:
-        print(f" - {s['name']}: {s['semaforo']} ({s['score_pct']}%) | Peak ETA: {s['eta_impact']} | Safe Return: {s['eta_safe_return']}")
+        print(f" - {s['name']}: {s['semaforo']} ({s['score_pct']}%) | Llegada del Pico: {s['eta_impact']} | Hora de Paso Seguro (Calma): {s['eta_safe_return']}")
