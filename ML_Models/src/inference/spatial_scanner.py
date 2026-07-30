@@ -285,6 +285,8 @@ def scan_full_la_serena_grid() -> dict:
     forecast_1h = float(current_row.get("precip_forecast_1h", 0.0))
     forecast_3h = float(current_row.get("precip_forecast_3h", 0.0))
     forecast_6h = float(current_row.get("precip_forecast_6h", 0.0))
+    forecast_12h = float(current_row.get("precip_forecast_12h", 0.0))
+    forecast_24h = float(current_row.get("precip_forecast_24h", 0.0))
 
     precip_signal = np.clip((precip_24h + precip_6h * 2.0) / 15.0, 0.0, 1.0)
     soil_signal = np.clip(api_72h / 15.0, 0.0, 1.0)
@@ -307,7 +309,9 @@ def scan_full_la_serena_grid() -> dict:
             info["weight_api"] * (api_72h / 25.0) +
             0.2 * base_ml_prob +
             0.1 * min(1.0, direct_Q / 10.0) +
-            0.1 * min(1.0, forecast_3h / 15.0)
+            0.1 * min(1.0, forecast_3h / 15.0) +
+            0.15 * min(1.0, forecast_6h / 15.0) +
+            0.1 * min(1.0, forecast_12h / 20.0)
         )
         
         score = min(1.0, base_score * water_presence * freezing_factor)
@@ -353,6 +357,8 @@ def scan_full_la_serena_grid() -> dict:
             "forecast_1h": round(forecast_1h, 1),
             "forecast_3h": round(forecast_3h, 1),
             "forecast_6h": round(forecast_6h, 1),
+            "forecast_12h": round(forecast_12h, 1),
+            "forecast_24h": round(forecast_24h, 1),
             "score_pct": score_pct,
             "semaforo": semaforo,
             "coordinates": {"lat": info["lat"], "lon": info["lon"]}

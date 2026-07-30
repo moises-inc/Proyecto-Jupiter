@@ -75,6 +75,10 @@ def generate_hydrological_features(df: pd.DataFrame) -> pd.DataFrame:
     df["precip_forecast_1h"] = df["precipitation"].shift(-1).fillna(0.0)
     df["precip_forecast_3h"] = df["precip_accum_3h"].shift(-3).fillna(0.0)
     df["precip_forecast_6h"] = df["precip_accum_6h"].shift(-6).fillna(0.0)
+    df["precip_forecast_12h"] = df["precip_accum_12h"].shift(-12).fillna(0.0)
+    df["precip_forecast_24h"] = df["precip_accum_24h"].shift(-24).fillna(0.0)
+    df["soil_saturation_forecast_6h"] = df["api_72h"].shift(-6).fillna(0.0)
+    df["soil_saturation_forecast_12h"] = df["api_72h"].shift(-12).fillna(0.0)
 
     # 5.6 SCS Curve Number & Runoff
     df["scs_curve_number"] = 75.0
@@ -113,6 +117,7 @@ FEATURE_COLUMNS = [
     "precip_max_1h_in_6h", "api_24h", "api_72h", "high_freezing_level_flag", 
     "freezing_level_scaled", "wind_speed_10m", "pressure_drop_6h", 
     "precip_forecast_1h", "precip_forecast_3h", "precip_forecast_6h", 
+    "precip_forecast_12h", "precip_forecast_24h", "soil_saturation_forecast_6h", "soil_saturation_forecast_12h",
     "scs_curve_number", "potential_retention_S", "direct_runoff_Q"
 ]
 

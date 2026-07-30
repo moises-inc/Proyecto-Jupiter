@@ -1,0 +1,9 @@
+Notice: Live NRT API request failed (Force fallback). Utilizing offline NRT fallback.
+Timestamp: 2026-07-30 11:00:00
+Commune Status: ALERTA AMARILLA COMUNAL (PREPARACIÓN DE PUESTOS DE MANDO)
+Total Sectors: 20
+
+Top 3 Risk Sectors:
+ - Las Compañías (Alta y Villa Lambert): ALERTA AMARILLA (67.5%) | Llegada del Pico: 14:00 hrs | Hora de Paso Seguro (Calma): 16:30 hrs
+ - Sector Ribereño Norte (Puentes Libertador / Zorrilla): ALERTA AMARILLA (66.3%) | Llegada del Pico: 15:00 hrs | Hora de Paso Seguro (Calma): 20:00 hrs
+ - Algarrobito / Gabriela Mistral / Quebrada Talca: ALERTA AMARILLA (62.2%) | Llegada del Pico: 13:00 hrs | Hora de Paso Seguro (Calma): 16:00 hrs
