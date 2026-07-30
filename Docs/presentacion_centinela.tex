@@ -1,0 +1,268 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning, calc}
+\usepackage{booktabs}
+
+% --- CONFIGURACIÓN DE COLORES INSTITUCIONALES (ESTILO BRAZO ROBÓTICO) ---
+\definecolor{USSBlue}{RGB}{0, 32, 91}    % Azul marino principal
+\definecolor{USSGold}{RGB}{212, 175, 55} % Dorado de acento
+\definecolor{AlertRed}{RGB}{192, 57, 43}  % Rojo alerta
+\definecolor{SuccessGreen}{RGB}{39, 174, 96} % Verde ok
+
+\mode<presentation> {
+  \usetheme{Madrid}
+  \usecolortheme[named=USSBlue]{structure}
+  \setbeamercolor{palette primary}{bg=USSBlue,fg=white}
+  \setbeamercolor{palette secondary}{bg=USSBlue,fg=white}
+  \setbeamercolor{palette tertiary}{bg=USSBlue,fg=white}
+  \setbeamercolor{title}{bg=white,fg=USSBlue}
+  \setbeamercolor{item}{fg=USSGold}
+  \setbeamercolor{block title}{bg=USSBlue,fg=white}
+  \setbeamercolor{block body}{bg=USSBlue!5,fg=black}
+  \setbeamercolor{block title alert}{bg=AlertRed,fg=white}
+  \setbeamercolor{block body alert}{bg=AlertRed!5,fg=black}
+  \setbeamertemplate{navigation symbols}{} 
+}
+
+% --- DATOS DE PORTADA ---
+\title[Proyecto Centinela]{Proyecto Centinela}
+\subtitle{Sistema de Alerta Temprana, Monitoreo y Respuesta en Emergencias}
+\author[Moisés Amundarain]{Moisés Amundarain}
+\institute{Ingeniería Civil Informática}
+\date{Julio, 2026}
+
+\begin{document}
+
+% 1. PORTADA
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% 2. DIAGNÓSTICO Y PROBLEMÁTICA
+\begin{frame}{¿Por qué nace Centinela? (Lecciones del Temporal)}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \textbf{El problema real en emergencias:}
+      \begin{itemize}
+        \item \textbf{Lluvias extremas:} Ríos y quebradas se desbordan de forma rápida.
+        \item \textbf{Aislamiento:} Comunidades quedan atrapadas sin poder pedir ayuda.
+        \item \textbf{Caminos cortados:} Socavones y aluviones bloquean el paso de vehículos.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{La falla de la tecnología actual:}
+      \begin{itemize}
+        \item \textbf{Corte de redes:} Las antenas celulares e internet se caen por falta de energía.
+        \item \textbf{Corte de agua:} Las plantas potabilizadoras se ensucian y fallan.
+        \item \textbf{Desinformación:} Rumores y avisos viejos circulan sin control en redes.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% 3. ¿CÓMO FUNCIONA CENTINELA?
+\begin{frame}{¿Cómo funciona Centinela? (3 Pasos)}
+  \centering
+  \resizebox{0.92\textwidth}{!}{
+    \begin{tikzpicture}[node distance=1.5cm, auto, >=stealth]
+      \tikzstyle{bloque1} = [rectangle, draw=USSBlue, fill=USSBlue!10, text width=4.2cm, minimum height=1.2cm, align=center, rounded corners, thick]
+      \tikzstyle{bloque2} = [rectangle, draw=USSGold!90!black, fill=USSGold!15, text width=4.2cm, minimum height=1.2cm, align=center, rounded corners, thick]
+      \tikzstyle{bloque3} = [rectangle, draw=SuccessGreen, fill=SuccessGreen!10, text width=4.2cm, minimum height=1.2cm, align=center, rounded corners, thick]
+      
+      \node [bloque1] (c1) {\textbf{1. Sensores y Satélites}\\ \small Miden lluvia, ríos y clima};
+      \node [bloque2, right=1.2cm of c1] (c2) {\textbf{2. Análisis Rápido}\\ \small Calcula riesgos de desborde};
+      \node [bloque3, right=1.2cm of c2] (c3) {\textbf{3. Alertas y Mapas}\\ \small Avisa a bomberos y vecinos};
+
+      \draw[->, ultra thick, USSBlue] (c1) -- (c2);
+      \draw[->, ultra thick, USSGold!90!black] (c2) -- (c3);
+    \end{tikzpicture}
+  }
+  
+  \vspace{0.5cm}
+  \begin{block}{Principios del Proyecto}
+    \begin{itemize}
+      \item \textbf{Económico:} Hecho con equipos accesibles de bajo costo.
+      \item \textbf{Energía Propia:} Funciona con pequeñas baterías solares.
+      \item \textbf{Sin Internet:} Transmite datos aun si se cae la red celular.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+% 4. INFORMACIÓN SATELITAL
+\begin{frame}{Uso de Datos Satelitales}
+  \begin{table}
+    \centering
+  \resizebox{\textwidth}{!}{
+    \begin{tabular}{lll}
+      \toprule
+      \textbf{Tipo de Satélite} & \textbf{Frecuencia de Datos} & \textbf{¿Para qué sirve en Centinela?} \\
+      \midrule
+      Satélites del Clima (GOES/GPM) & Cada 10 a 30 minutos & Ver la lluvia antes de que caiga en la ciudad. \\
+      Satélites de Radar (Sentinel) & Cada 6 días & Ver zonas inundadas a través de las nubes. \\
+      Satélites de Mapas (NASA) & Diarios / Horarios & Mapear el avance del agua en el terreno. \\
+      \bottomrule
+    \end{tabular}
+  }
+  \end{table}
+
+  \vspace{0.3cm}
+  \begin{block}{Ventaja Principal}
+    Al cruzar la lluvia del satélite con la nieve en la cordillera, podemos avisar sobre crecidas de ríos con \textbf{varias horas de anticipación}.
+  \end{block}
+\end{frame}
+
+% 5. ANTES DEL DESASTRE
+\begin{frame}{Antes del Desastre: Sensores de Terreno y Radio}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \textbf{Sensores en Ríos y Quebradas:}
+      \begin{itemize}
+        \item Miden si el agua sube rápido en puentes o ríos.
+        \item Miden la humedad del suelo para prever barro.
+        \item Usan carcasas resistentes al agua y sol.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Transmisión por Radio Mesh:}
+      \begin{itemize}
+        \item Envía mensajes muy cortos de radio de casa en casa.
+        \item No necesita antenas de celular ni cables.
+        \item Los datos se empaquetan en códigos pequeños de pocos bytes.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.4cm}
+  \centering
+  \resizebox{0.82\textwidth}{!}{
+    \begin{tikzpicture}[font=\sffamily\small]
+      \draw[fill=USSBlue!20, thick] (0,0) rectangle (2.5,0.8) node[pos=.5] {\textbf{ID del Sensor}};
+      \draw[fill=USSGold!30, thick] (2.5,0) rectangle (5.5,0.8) node[pos=.5] {\textbf{Nivel del Agua}};
+      \draw[fill=SuccessGreen!20, thick] (5.5,0) rectangle (8.5,0.8) node[pos=.5] {\textbf{Estado Batería}};
+      \draw[fill=AlertRed!20, thick] (8.5,0) rectangle (10.5,0.8) node[pos=.5] {\textbf{Alerta}};
+    \end{tikzpicture}
+  }
+\end{frame}
+
+% 6. DESPUÉS DEL DESASTRE: BOTÓN SOS
+\begin{frame}{Después del Desastre: Botón SOS desde el Celular}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \textbf{Página de Emergencia en el Celular:}
+      \begin{itemize}
+        \item El vecino se conecta al Wi-Fi del sensor local.
+        \item El celular obtiene su ubicación por \textbf{GPS satelital} (sin internet ni saldo).
+        \item El usuario presiona su estado en 3 opciones:
+          \begin{itemize}
+            \item \textcolor{AlertRed}{\textbf{[ROJO] Peligro Vital / En el Techo}}
+            \item \textcolor{USSGold!90!black}{\textbf{[AMARILLO] Aislado sin Agua}}
+            \item \textcolor{SuccessGreen}{\textbf{[VERDE] Aislado pero Bien}}
+          \end{itemize}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Mapa de Rescate para Bomberos}
+        El mensaje viaja por radio al Puesto de Mando y muestra un mapa con puntos exactos de dónde ir a rescatar primero.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% 7. DESPUÉS DEL DESASTRE: PERSONAS ENCONTRADAS
+\begin{frame}{Después del Desastre: Personas Encontradas sin Rumores}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \textbf{El problema de los rumores:}
+      \begin{itemize}
+        \item En redes sociales circulan afiches de personas perdidas que ya aparecieron.
+        \item Esto causa pánico y hace perder tiempo a los equipos de rescate.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Solución con Código QR:}
+      \begin{itemize}
+        \item La búsqueda genera un código QR.
+        \item Al llegar la persona a un albergue u hospital, se registra en el sistema.
+        \item Quien escanee el QR ve de inmediato: \\ \textcolor{SuccessGreen}{\textbf{ENCONTRADO EN ALBERGUE}}.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% 8. DESPUÉS DEL DESASTRE: AGUA Y RUTAS
+\begin{frame}{Después del Desastre: Agua Potable y Rutas Seguras}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Sensores en Estanques de Agua}
+        \begin{itemize}
+          \item Sensores simples en las tapas de los estanques de la comunidad.
+          \item Miden cuánta agua queda.
+          \item Avisan automáticamente cuando queda menos del 15\% para enviar el camión aljibe.
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Mapa de Rutas Seguras}
+        \begin{itemize}
+          \item Los vehículos de emergencia reportan caminos cortados o socavones.
+          \item El sistema calcula rutas por caminos altos que no se inundan para llevar ayuda.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% 9. APOYO A LOS EQUIPOS DE EMERGENCIA
+\begin{frame}{Apoyo a los Equipos de Emergencia}
+  \centering
+  \resizebox{0.82\textwidth}{!}{
+    \begin{tikzpicture}[node distance=1.6cm, auto, >=stealth]
+      \tikzstyle{centro} = [ellipse, draw=USSBlue, fill=USSBlue!15, text width=3.2cm, minimum height=1.2cm, align=center, thick]
+      \tikzstyle{equipo} = [rectangle, draw=black!70, fill=black!5, text width=3cm, minimum height=1cm, align=center, rounded corners]
+
+      \node [centro] (core) {\textbf{Proyecto Centinela}\\ \small Datos y Radio Mesh};
+      \node [equipo, above left=0.6cm and 0.8cm of core] (p25) {\textbf{Radios de Bomberos}\\ \small Avisos directos};
+      \node [equipo, above right=0.6cm and 0.8cm of core] (cenco) {\textbf{Centrales de Alarma}\\ \small Mapas en tiempo real};
+      \node [equipo, below left=0.6cm and 0.8cm of core] (dga) {\textbf{Agua y Caudales}\\ \small Medición de ríos};
+      \node [equipo, below right=0.6cm and 0.8cm of core] (senapred) {\textbf{ALERTAS OFICIALES}\\ \small Apoyo a la comunidad};
+
+      \draw[<->, thick, USSBlue] (core) -- (p25);
+      \draw[<->, thick, USSBlue] (core) -- (cenco);
+      \draw[<->, thick, USSBlue] (core) -- (dga);
+      \draw[<->, thick, USSBlue] (core) -- (senapred);
+    \end{tikzpicture}
+  }
+\end{frame}
+
+% 10. CASOS EN LA SERENA Y CONCLUSIÓN
+\begin{frame}{Ejemplo Real en La Serena y Próximos Pasos}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \textbf{Ejemplos en La Serena:}
+      \begin{itemize}
+        \item \textbf{Pueblo Islón:} Avisar la crecida del río para evacuar de día.
+        \item \textbf{Las Compañías:} Recibir llamados SOS por radio sin red de celular.
+        \item \textbf{Zona Urbana:} Guiar camiones con agua evitando la Ruta 5 cortada.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Próximos Pasos:}
+      \begin{enumerate}
+        \item \textbf{Conversación:} Jjuntar comentarios de amigos bomberos.
+        \item \textbf{Simulador:} Probar el sistema primero en computador.
+        \item \textbf{Pruebas:} Construir prototipos pequeños para probar en terreno.
+      \end{enumerate}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.5cm}
+  \centering
+  \textbf{\Large ¡Muchas Gracias!}
+\end{frame}
+
+\end{document}
