@@ -12,12 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
   initChart();
   fetchScanData();
   
-  // Poll every 15 seconds ONLY when in Live NRT Mode
+  // Poll every 5 seconds for immediate UI updates
   setInterval(() => {
     if (!isSimulationMode) {
       fetchScanData();
     }
-  }, 15000);
+  }, 5000);
 });
 
 /* Initialize Leaflet Map Centered at La Serena */
@@ -314,7 +314,7 @@ function toggleStormSimulation() {
     simBtn.style.borderColor = '#F1C40F';
     simBtn.style.color = '#F1C40F';
     
-    liveText.innerText = 'SISTEMA EN VIVO (NRT)';
+    liveText.innerText = 'SISTEMA EN VIVO NRT (DESCARGA: CADA 5 MIN)';
     document.getElementById('live-indicator').style.borderColor = '#2ECC71';
     document.getElementById('live-indicator').style.color = '#2ECC71';
   }
