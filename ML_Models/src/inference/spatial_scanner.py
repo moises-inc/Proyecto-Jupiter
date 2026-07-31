@@ -273,26 +273,48 @@ def scan_full_la_serena_grid() -> dict:
         tc_hours = info["concentration_time_hours"]
         drain_hours = info.get("recovery_drain_hours", 2.0)
 
-        # Dynamic Forecast Peak & Safe Clearance Scanning across Multi-Model Ensemble
-        future_df = features_df[features_df["time"] >= current_dt]
-        active_rain_df = future_df[future_df["precipitation"] > 0.1]
-        
-        if not active_rain_df.empty:
-            peak_idx = active_rain_df["precipitation"].idxmax()
-            peak_forecast_dt = pd.to_datetime(active_rain_df.loc[peak_idx, "time"])
-            eta_impact = peak_forecast_dt + pd.Timedelta(hours=tc_hours)
-            eta_impact_formatted = eta_impact.strftime("%d/%m/%Y %H:%M hrs")
-            
-            last_rain_dt = pd.to_datetime(active_rain_df["time"].iloc[-1])
-            eta_safe_return = last_rain_dt + pd.Timedelta(hours=drain_hours)
-            eta_safe_formatted = eta_safe_return.strftime("%d/%m/%Y %H:%M hrs")
+        # Hydrological Peak & Recession Phase Scanner
+        # Evaluates past 12h AND future 12h hyetographs to detect if peak impact HAS ALREADY PASSED
+        past_12h_dt = current_dt - pd.Timedelta(hours=12)
+        future_12h_dt = current_dt + pd.Timedelta(hours=12)
+        window_df = features_df[(features_df["time"] >= past_12h_dt) & (features_df["time"] <= future_12h_dt)]
+
+        if not window_df.empty and "precipitation" in window_df.columns:
+            global_peak_idx = window_df["precipitation"].idxmax()
+            global_peak_dt = pd.to_datetime(window_df.loc[global_peak_idx, "time"])
+            global_peak_mm = float(window_df.loc[global_peak_idx, "precipitation"])
+
+            # Hydrograph peak impact time at sector outlet = peak_time + concentration_time
+            hydro_peak_dt = global_peak_dt + pd.Timedelta(hours=tc_hours)
+            safe_drain_dt = hydro_peak_dt + pd.Timedelta(hours=drain_hours)
+
+            if current_dt >= hydro_peak_dt:
+                # THE PEAK IMPACT HAS ALREADY PASSED!
+                minutes_since_peak = int((current_dt - hydro_peak_dt).total_seconds() / 60)
+                hours_since_peak = round(minutes_since_peak / 60.0, 1)
+
+                if current_dt >= safe_drain_dt:
+                    eta_impact_formatted = f"PICO TRANSCURRIDO ({hydro_peak_dt.strftime('%H:%M hrs')} - En Fase de Calma)"
+                    eta_safe_formatted = f"PASO SEGURO ACTIVO (Drenado desde {safe_drain_dt.strftime('%H:%M hrs')})"
+                    if semaforo != "ALERTA ROJA":
+                        transitability = "TRANSITABLE (Fase de Calma Expirada)"
+                else:
+                    eta_impact_formatted = f"PICO TRANSCURRIDO (Ocurrió {hydro_peak_dt.strftime('%H:%M hrs')} - Hace {hours_since_peak}h)"
+                    eta_safe_formatted = f"En Recesión/Drenaje (Paso Seguro: {safe_drain_dt.strftime('%H:%M hrs')})"
+                    if semaforo == "ALERTA ROJA":
+                        transitability = f"EVACUACIÓN EN RECESIÓN (Drenaje Activo hasta {safe_drain_dt.strftime('%H:%M hrs')})"
+                    elif semaforo == "ALERTA AMARILLA":
+                        transitability = f"PRECAUCIÓN EN DRENAJE (Paso Seguro: {safe_drain_dt.strftime('%H:%M hrs')})"
+            else:
+                # THE PEAK IMPACT IS STILL APPROACHING
+                minutes_to_peak = int((hydro_peak_dt - current_dt).total_seconds() / 60)
+                eta_impact_formatted = f"{hydro_peak_dt.strftime('%d/%m/%Y %H:%M hrs')} (En ~{minutes_to_peak} min)"
+                eta_safe_formatted = f"Paso Seguro Estimado: {safe_drain_dt.strftime('%H:%M hrs')}"
         elif smooth_score > 0.3:
-            eta_impact = current_dt + pd.Timedelta(hours=tc_hours)
-            eta_impact_formatted = eta_impact.strftime("%d/%m/%Y %H:%M hrs")
-            eta_safe_return = eta_impact + pd.Timedelta(hours=drain_hours + 2.0)
-            eta_safe_formatted = eta_safe_return.strftime("%d/%m/%Y %H:%M hrs")
+            eta_impact_formatted = f"EN MONITOREO DE CAUDAL (+{tc_hours}h)"
+            eta_safe_formatted = f"Paso Seguro Estimado (+{tc_hours + drain_hours}h)"
         else:
-            eta_impact_formatted = "Sin Lluvia Prevista"
+            eta_impact_formatted = "Sin Pico de Lluvia Previsto"
             eta_safe_formatted = "Condición Estable (Transitable)"
 
         scanned_sectors.append({
