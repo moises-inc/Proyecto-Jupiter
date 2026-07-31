@@ -77,25 +77,26 @@ def scan_full_la_serena_grid() -> dict:
     phys_constraint = float(current_row.get("physics_informed_constraint", 0.0))
     enkf_corr = float(current_row.get("enkf_assimilation_correction", 0.0))
 
-    # Blend with CEAZAMET ground-truth observations in real-time
-    _, ceazamet_summary = get_ceazamet_ground_truth_summary()
-    if ceazamet_summary.get("ceazamet_available"):
-        obs_peak = float(ceazamet_summary.get("peak_precipitation_mm", 0.0))
-        obs_avg = float(ceazamet_summary.get("communal_avg_precipitation_mm", 0.0))
-        ground_obs = max(obs_peak, obs_avg)
-        nowcast_rate = max(nowcast_rate, ground_obs)
-        enkf_corr = max(enkf_corr, ground_obs)
-        precip_24h = max(precip_24h, ground_obs)
-        precip_6h = max(precip_6h, ground_obs)
-
     # Multi-Source Redundant Weather Consensus (Open-Meteo, wttr.in, DGA)
     multi_source = get_multi_source_weather_consensus()
     consensus_precip = float(multi_source.get("consensus_precip_24h_mm", 0.0))
     uncertainty_boost = float(multi_source.get("uncertainty_boost_factor", 0.0))
 
-    # Override precipitation with the MAXIMUM from all sources (conservative principle)
-    precip_24h = max(precip_24h, consensus_precip)
-    precip_6h = max(precip_6h, consensus_precip * 0.6)  # Approx 60% of 24h falls in active 6h window
+    # Blend with CEAZAMET ground-truth observations using Robust Spatial Consensus
+    _, ceazamet_summary = get_ceazamet_ground_truth_summary()
+    if ceazamet_summary.get("ceazamet_available"):
+        obs_avg = float(ceazamet_summary.get("communal_avg_precipitation_mm", 0.0))
+        obs_peak = float(ceazamet_summary.get("peak_precipitation_mm", 0.0))
+        peak_station = ceazamet_summary.get("peak_station", "")
+
+        # Robust Consensus: Average of communal observations and multi-provider models
+        # Prevents a single isolated mountain station (e.g. El Romeral 28.3mm) from inflating the entire urban grid
+        valid_sources = [p for p in [precip_24h, consensus_precip, obs_avg] if p > 0.0]
+        precip_24h = float(np.median(valid_sources)) if valid_sources else precip_24h
+        precip_6h = min(precip_24h, max(precip_6h, consensus_precip * 0.6))
+    else:
+        precip_24h = max(precip_24h, consensus_precip)
+        precip_6h = max(precip_6h, consensus_precip * 0.6)
 
     # Chilean Official Agencies Data Ingestion (SENAPRED & DMC)
     agency_summary = get_chilean_agencies_summary()
@@ -119,8 +120,8 @@ def scan_full_la_serena_grid() -> dict:
         phi_api = min(1.0, api_72h / 40.0)
         phi_ml = base_ml_prob
         
-        # Effective Hydro Runoff: Accounts for both local SCS runoff AND upstream river surge (Muskingum / EnKF)
-        effective_hydro_q = max(direct_Q, muskingum_q, enkf_corr)
+        # Effective Hydro Runoff: Accounts for local SCS runoff AND actual river streamflow (Muskingum)
+        effective_hydro_q = max(direct_Q, muskingum_q)
         phi_runoff = min(1.0, effective_hydro_q / 10.0)
         phi_forecast = 0.4 * min(1.0, forecast_3h / 15.0) + 0.6 * min(1.0, forecast_6h / 20.0)
         phi_geotech = 1.0 / (1.0 + np.exp(8.0 * (geotech_fs - 1.0)))
@@ -133,7 +134,8 @@ def scan_full_la_serena_grid() -> dict:
             0.15 * phi_runoff +
             0.15 * phi_forecast +
             0.05 * phi_geotech +
-            0.05 * phi_routing
+            0.05 * phi_routing +
+            0.05 * min(1.0, enkf_corr / 10.0)
         )
 
         # Precordillera / River Quebrada Special Weighting
@@ -693,200 +695,3 @@ def calculate_scs_direct_runoff(precip_mm: float, cn: float) -> float:
     return float(((precip_mm - ia) ** 2) / (precip_mm + 0.8 * S))
 
 
-def scan_full_la_serena_grid() -> dict:
-    raw_df = fetch_live_nrt_data()
-    features_df = generate_hydrological_features(raw_df)
-    model, feature_cols = load_jupiter_model()
-    current_row = get_current_nrt_row(features_df)
-    valid_cols = [col for col in feature_cols if col in current_row.index]
-    X_current = pd.DataFrame([[current_row[c] for c in valid_cols]], columns=valid_cols)
-
-    if hasattr(model, "predict_proba"):
-        probs = model.predict_proba(X_current)[0]
-        classes = list(model.classes_)
-        base_ml_prob = float(probs[classes.index(1)]) if 1 in classes else 0.0
-    else:
-        base_ml_prob = float(model.predict(X_current)[0])
-
-    precip_24h = float(current_row.get("precip_accum_24h", 0.0))
-    precip_6h = float(current_row.get("precip_accum_6h", 0.0))
-    api_72h = float(current_row.get("api_72h", 0.0))
-    high_freezing = float(current_row.get("high_freezing_level_flag", 0))
-
-    forecast_1h = float(current_row.get("precip_forecast_1h", 0.0))
-    forecast_3h = float(current_row.get("precip_forecast_3h", 0.0))
-    forecast_6h = float(current_row.get("precip_forecast_6h", 0.0))
-    forecast_12h = float(current_row.get("precip_forecast_12h", 0.0))
-    forecast_24h = float(current_row.get("precip_forecast_24h", 0.0))
-
-    # 5 New Predictive Features (Integrated)
-    nowcast_rate = float(current_row.get("nowcast_rain_rate", 0.0))
-    geotech_fs = float(current_row.get("geotech_fs", 2.0))
-    muskingum_q = float(current_row.get("muskingum_cunge_q", 0.0))
-    phys_constraint = float(current_row.get("physics_informed_constraint", 0.0))
-    enkf_corr = float(current_row.get("enkf_assimilation_correction", 0.0))
-
-    # Blend with CEAZAMET ground-truth observations in real-time
-    _, ceazamet_summary = get_ceazamet_ground_truth_summary()
-    if ceazamet_summary.get("ceazamet_available"):
-        obs_peak = float(ceazamet_summary.get("peak_precipitation_mm", 0.0))
-        obs_avg = float(ceazamet_summary.get("communal_avg_precipitation_mm", 0.0))
-        ground_obs = max(obs_peak, obs_avg)
-        nowcast_rate = max(nowcast_rate, ground_obs)
-        enkf_corr = max(enkf_corr, ground_obs)
-        precip_24h = max(precip_24h, ground_obs)
-        precip_6h = max(precip_6h, ground_obs)
-
-
-    precip_signal = np.clip((precip_24h + precip_6h * 2.0) / 15.0, 0.0, 1.0)
-    soil_signal = np.clip(api_72h / 15.0, 0.0, 1.0)
-    water_presence = max(precip_signal, soil_signal)
-
-    current_dt = pd.to_datetime(current_row["time"])
-
-    scanned_sectors = []
-    red_count = 0
-    yellow_count = 0
-
-    for key, info in LA_SERENA_SECTOR_GRID.items():
-        cn = info.get("scs_cn", 80)
-        direct_Q = calculate_scs_direct_runoff(precip_24h, cn)
-
-        freezing_factor = 1.5 if high_freezing == 1 and info["weight_freezing"] > 0.1 else 1.0
-        
-        base_score = (
-            info["weight_precip_short"] * (precip_6h / 20.0) +
-            info["weight_api"] * (api_72h / 25.0) +
-            0.2 * base_ml_prob +
-            0.1 * min(1.0, direct_Q / 10.0) +
-            0.1 * min(1.0, forecast_3h / 15.0) +
-            0.15 * min(1.0, forecast_6h / 15.0) +
-            0.1 * min(1.0, forecast_12h / 20.0) +
-            0.05 * min(1.0, nowcast_rate / 10.0) + 
-            0.05 * min(1.0, muskingum_q / 50.0) +
-            0.05 * min(1.0, enkf_corr / 10.0)
-        )
-        
-        # Physics-informed geotech override
-        if geotech_fs < 1.0 and info['type'] in ['Ladera / Faldeo', 'Alta Precordillera', 'Cerros y Quebradas Norte']:
-            base_score = max(base_score, 0.85)
-        
-        # Apply physics-informed constraint penalty if mass conservation fails (e.g., phys_constraint is high)
-        if phys_constraint > 10.0:
-            base_score += 0.05
-        
-        score = min(1.0, base_score * water_presence * freezing_factor)
-
-        # -------------------------------------------------------------------------
-        # Physical Safety Safeguards (Reglas de Coherencia Física Inviolables)
-        # Previenen falsas alarmas de evacuación durante lluvias débiles/moderadas
-        # -------------------------------------------------------------------------
-        if precip_24h < 10.0 and direct_Q < 1.0 and geotech_fs >= 1.0:
-            # Lluvia débil sin escorrentía superficial -> Mantener estrictamente en VERDE (max 25%)
-            score = min(score, 0.25)
-        elif precip_24h < 25.0 and direct_Q < 5.0 and geotech_fs >= 1.0:
-            # Lluvia moderada sin escorrentía crítica -> Mantener máximo en AMARILLA (max 55%)
-            score = min(score, 0.55)
-
-        score_pct = round(score * 100.0, 1)
-
-        tc_hours = info["concentration_time_hours"]
-        drain_hours = info.get("recovery_drain_hours", 2.0)
-
-        # Dynamic Forecast Peak & Safe Clearance Scanning across Multi-Model Ensemble
-        future_df = features_df[features_df["time"] >= current_dt]
-        active_rain_df = future_df[future_df["precipitation"] > 0.1]
-        
-        if not active_rain_df.empty:
-            # 1. Punto Máximo de Impacto: Peak forecast hour + Concentration Time Tc
-            peak_idx = active_rain_df["precipitation"].idxmax()
-            peak_forecast_dt = pd.to_datetime(active_rain_df.loc[peak_idx, "time"])
-            eta_impact = peak_forecast_dt + pd.Timedelta(hours=tc_hours)
-            eta_impact_formatted = eta_impact.strftime("%d/%m/%Y %H:%M hrs")
-            
-            # 2. Hora de Paso Seguro (Calma): End of active storm + Drainage Time
-            last_rain_dt = pd.to_datetime(active_rain_df["time"].iloc[-1])
-            eta_safe_return = last_rain_dt + pd.Timedelta(hours=drain_hours)
-            eta_safe_formatted = eta_safe_return.strftime("%d/%m/%Y %H:%M hrs")
-        elif score > 0.3:
-            eta_impact = current_dt + pd.Timedelta(hours=tc_hours)
-            eta_impact_formatted = eta_impact.strftime("%d/%m/%Y %H:%M hrs")
-            eta_safe_return = eta_impact + pd.Timedelta(hours=drain_hours + 2.0)
-            eta_safe_formatted = eta_safe_return.strftime("%d/%m/%Y %H:%M hrs")
-        else:
-            eta_impact_formatted = "Sin Lluvia Prevista"
-            eta_safe_formatted = "Condición Estable (Transitable)"
-
-        if score >= 0.7:
-            semaforo = "ALERTA ROJA"
-            transitability = f"TRANSITO RESTRICTORIO (Hora de Paso Seguro (Calma): {eta_safe_formatted})"
-            red_count += 1
-        elif score >= 0.4:
-            semaforo = "ALERTA AMARILLA"
-            transitability = f"PRECAUCIÓN VIAL (Hora de Paso Seguro (Calma): {eta_safe_formatted})"
-            yellow_count += 1
-        else:
-            semaforo = "VERDE ESTABLE"
-            transitability = "TRANSITABLE (Condición Normal)"
-
-        scanned_sectors.append({
-            "key": key,
-            "name": info["name"],
-            "type": info["type"],
-            "elevation_m": info["elevation_m"],
-            "radius_m": info["radius_m"],
-            "disaster_type": info["disaster_type"],
-            "concentration_time_hours": tc_hours,
-            "recovery_drain_hours": drain_hours,
-            "eta_impact": eta_impact_formatted,
-            "eta_safe_return": eta_safe_formatted,
-            "transitability_status": transitability,
-            "scs_curve_number": cn,
-            "agua_acumulada_superficie": round(direct_Q, 2),
-            "forecast_1h": round(forecast_1h, 1),
-            "forecast_3h": round(forecast_3h, 1),
-            "forecast_6h": round(forecast_6h, 1),
-            "forecast_12h": round(forecast_12h, 1),
-            "forecast_24h": round(forecast_24h, 1),
-"score_pct": score_pct,
-            "geotech_fs": round(geotech_fs, 2),
-            "nowcast_rain_rate": round(nowcast_rate, 2),
-            "muskingum_q": round(muskingum_q, 2),
-            "semaforo": semaforo,
-            "coordinates": {"lat": info["lat"], "lon": info["lon"]}
-        })
-
-    scanned_sectors.sort(key=lambda x: x["score_pct"], reverse=True)
-
-    if red_count > 0:
-        commune_status = "ALERTA ROJA COMUNAL (EVACUACIÓN Y RESCATE PREVENTIVO ACTIVO)"
-    elif yellow_count > 0:
-        commune_status = "ALERTA AMARILLA COMUNAL (PREPARACIÓN DE PUESTOS DE MANDO)"
-    else:
-        commune_status = "ALERTA VERDE COMUNAL (CONDICIONES ESTABLES)"
-
-    _, ceazamet_summary = get_ceazamet_ground_truth_summary()
-
-    return {
-        "timestamp": str(current_row["time"]),
-        "total_sectors_scanned": len(scanned_sectors),
-        "commune_status": commune_status,
-        "telemetry_summary": {
-            "precip_accum_24h_mm": round(precip_24h, 1),
-            "precip_accum_6h_mm": round(precip_6h, 1),
-            "api_soil_saturation": round(api_72h, 1),
-            "freezing_level_m": round(float(current_row["freezing_level_scaled"] * 1000.0), 0)
-        },
-        "ceazamet_telemetry": ceazamet_summary,
-        "sectors": scanned_sectors
-    }
-
-
-if __name__ == "__main__":
-    scan = scan_full_la_serena_grid()
-    print(f"Timestamp: {scan['timestamp']}")
-    print(f"Commune Status: {scan['commune_status']}")
-    print(f"Total Sectors: {scan['total_sectors_scanned']}")
-    print("\nTop 3 Risk Sectors:")
-    for s in scan['sectors'][:3]:
-        print(f" - {s['name']}: {s['semaforo']} ({s['score_pct']}%) | Llegada del Pico: {s['eta_impact']} | Hora de Paso Seguro (Calma): {s['eta_safe_return']}")

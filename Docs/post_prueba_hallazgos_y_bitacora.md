@@ -95,6 +95,8 @@ Esta nota documenta de manera sistemática y continua todos los hallazgos técni
 - `bbc8be6`: Bitácora inicial de hallazgos y módulo ingestor `ingest_senapred.py`.
 - `7982143`: Refactorización de estabilización convexa, EMA adaptativo, histeresis del 8% y test suite `test_stability.py`.
 - `f079db5`: Registro de Hallazgo 5 sobre micro-variaciones dentro de banda Verde.
+- `3f7a2d4`: Corrección de punto ciego en crecida fluvial aguas arriba para Islón/El Romero.
+- `9ff4f28`: Integración de ingesta meteorológica multi-fuente redundante (Open-Meteo, wttr.in, DGA) with uncertainty boost.
 
 ---
 
