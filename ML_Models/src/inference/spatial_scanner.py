@@ -461,6 +461,17 @@ def scan_full_la_serena_grid() -> dict:
     phys_constraint = float(current_row.get("physics_informed_constraint", 0.0))
     enkf_corr = float(current_row.get("enkf_assimilation_correction", 0.0))
 
+    # Blend with CEAZAMET ground-truth observations in real-time
+    _, ceazamet_summary = get_ceazamet_ground_truth_summary()
+    if ceazamet_summary.get("ceazamet_available"):
+        obs_peak = float(ceazamet_summary.get("peak_precipitation_mm", 0.0))
+        obs_avg = float(ceazamet_summary.get("communal_avg_precipitation_mm", 0.0))
+        ground_obs = max(obs_peak, obs_avg)
+        nowcast_rate = max(nowcast_rate, ground_obs)
+        enkf_corr = max(enkf_corr, ground_obs)
+        precip_24h = max(precip_24h, ground_obs)
+        precip_6h = max(precip_6h, ground_obs)
+
 
     precip_signal = np.clip((precip_24h + precip_6h * 2.0) / 15.0, 0.0, 1.0)
     soil_signal = np.clip(api_72h / 15.0, 0.0, 1.0)

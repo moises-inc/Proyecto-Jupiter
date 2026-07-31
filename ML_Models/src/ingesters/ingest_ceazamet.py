@@ -48,7 +48,7 @@ CEAZAMET_STATIONS = {
 
 
 def parse_ceazamet_html(html_content: str, e_cod: str) -> Dict:
-    soup = BeautifulSoup(html_content, "html.parser")
+    import re
     result = {
         "station_id": e_cod,
         "station_name": CEAZAMET_STATIONS.get(e_cod, {}).get("name", f"Station_{e_cod}"),
@@ -60,30 +60,56 @@ def parse_ceazamet_html(html_content: str, e_cod: str) -> Dict:
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    tables = soup.find_all("table")
-    for table in tables:
-        rows = table.find_all("tr")
-        for row in rows:
-            cells = row.find_all("td")
-            if len(cells) >= 2:
-                label = cells[0].get_text(strip=True).lower()
-                value_cell = cells[1].get_text(strip=True)
-                value = _parse_numeric(value_cell)
-                if "precipitaci" in label or "lluvia" in label:
-                    if value is not None:
+    # 1. Try regex extraction from CEAZAMET popup text format: "Precip.:0.3 T2m:14.3°C, Vel.Viento:1.5ms"
+    precip_match = re.search(r'Precip\.?\:\s*(?:<\/strong>)?\s*([\d\.]+)', html_content, re.IGNORECASE)
+    if precip_match:
+        try:
+            result["precipitation_mm"] = float(precip_match.group(1))
+        except ValueError:
+            result["precipitation_mm"] = 0.0
+    elif "msnm" in html_content:
+        # CEAZAMET text format omits Precip tag when precipitation is 0.0 mm
+        result["precipitation_mm"] = 0.0
+
+    temp_match = re.search(r'T2m\:\s*([\d\.\-]+)', html_content, re.IGNORECASE)
+    if temp_match:
+        try:
+            result["temperature_c"] = float(temp_match.group(1))
+        except ValueError:
+            pass
+
+    wind_match = re.search(r'Vel\.Viento\:\s*([\d\.]+)', html_content, re.IGNORECASE)
+    if wind_match:
+        try:
+            result["wind_speed_kmh"] = float(wind_match.group(1))
+        except ValueError:
+            pass
+
+    dir_match = re.search(r'Dir\.Viento\:\s*([\w\d\°]+)', html_content, re.IGNORECASE)
+    if dir_match:
+        result["wind_direction"] = dir_match.group(1)
+
+    # 2. Fallback to HTML table parsing if regex didn't find precipitation
+    if result["precipitation_mm"] is None and "table" in html_content.lower():
+        soup = BeautifulSoup(html_content, "html.parser")
+        tables = soup.find_all("table")
+        for table in tables:
+            rows = table.find_all("tr")
+            for row in rows:
+                cells = row.find_all("td")
+                if len(cells) >= 2:
+                    label = cells[0].get_text(strip=True).lower()
+                    value_cell = cells[1].get_text(strip=True)
+                    value = _parse_numeric(value_cell)
+                    if ("precipitaci" in label or "lluvia" in label) and value is not None:
                         result["precipitation_mm"] = value
-                elif "temperatur" in label:
-                    if value is not None:
+                    elif "temperatur" in label and value is not None:
                         result["temperature_c"] = value
-                elif "humeda" in label:
-                    if value is not None:
+                    elif "humeda" in label and value is not None:
                         result["relative_humidity_pct"] = value
-                elif "velocidad del viento" in label or "viento" in label:
-                    if value is not None:
+                    elif ("velocidad del viento" in label or "viento" in label) and value is not None:
                         result["wind_speed_kmh"] = value
-                elif "direcci" in label:
-                    dir_text = value_cell.strip()
-                    result["wind_direction"] = dir_text if dir_text else None
+
     return result
 
 
