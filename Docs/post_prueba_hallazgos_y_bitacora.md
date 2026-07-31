@@ -53,7 +53,7 @@ Esta nota documenta de manera sistemática y continua todos los hallazgos técni
 
 ---
 
-### 🇨🇱 Hallazgo 4: Necesidad de Integrar Fuentes Institucionales Chilenas (SENAPRED y DMC)
+### 🇨🇱 Hallazgo 4: Integración de Fuentes Institucionales Chilenas (SENAPRED y DMC)
 - **Fecha/Hora de Detección:** 31 de Julio de 2026, 09:32 AM
 - **Requerimiento:** Incorporación de avisos meteorológicos de la DMC y alertas oficiales de SENAPRED para dar respaldo institucional al modelo ML.
 - **Solución Implementada:**
@@ -63,14 +63,25 @@ Esta nota documenta de manera sistemática y continua todos los hallazgos técni
 
 ---
 
+### 🟢 Hallazgo 5: Naturaleza de las Micro-Variaciones Dentro de la Banda de Alerta Verde (ej. 8.7% vs 2.7%)
+- **Fecha/Hora de Detección:** 31 de Julio de 2026, 10:02 AM
+- **Consulta Operacional:** El usuario notó que el score osciló de **8.7%** a **2.7%** tras un reporte enviado y consultó si constituía una falla del sistema.
+- **Explicación Técnica & Análisis de Invarianza:**
+  - **No representa una falla.** La **Alerta Verde Comunal** abarca todo el rango continuo de $[0.0\%, 40.0\%]$. Cualquier valor dentro de esta banda representa la misma condición operativa: *Monitoreo estable sin necesidad de despliegue de emergencia*.
+  - **Causa del Ajuste (2.7%):** La variación responde a la aplicación de la refactorización convexa $\sum w_i = 1.0$, que depuró el ruido residual en la puntuación base.
+  - **Recomendación para Reportes a Autoridades:** En comunicaciones verbales a Bomberos/COGRID, se recomienda reportar la **Categoría de Alerta (Verde Comunal < 10%)** en lugar de variaciones decimales instantáneas para evitar confusión innecesaria.
+
+---
+
 ## 📈 3. Puntos de Análisis para la Evaluación Post-Prueba Real
 
 | Tema a Evaluar | Situación en Prueba Real | Propuesta Post-Prueba |
 |---|---|---|
-| **Suavizado Temporal (EMA)** | Actualizaciones directas cada 5 min. | Implementar Media Móvil Exponencial adaptativa para suavizar la curva de score entre ciclos. |
-| **Banda de Histeresis** | Umbrales fijos en 40% y 70%. | Aplicar histeresis del 8% (ej. subir a Roja a 70%, bajar a Amarilla solo cuando descienda de 62%). |
+| **Suavizado Temporal (EMA)** | Implementado en `spatial_scanner.py` ($\alpha_{\text{onset}} = 0.45, \alpha_{\text{decay}} = 0.10$). | Validar la curva de decaimiento post-tormenta en la noche. |
+| **Banda de Histeresis** | Histeresis del 8% activa en `spatial_scanner.py`. | Confirmar ausencia de *flickering* durante el frente del 31-Julio. |
 | **Ponderación Convexa** | Pesos ajustados a $\sum w_i = 1.0$. | Validar la matriz de pesos con datos históricos post-evento. |
 | **Integración CEAZAMET** | Ingesta activa por AJAX popup. | Evaluar solicitud de API Key o Web Service directo con la directiva de CEAZA. |
+| **Integración SENAPRED/DMC** | Ingestor `ingest_senapred.py` activo. | Automatizar la alerta institucional en el frontend UI. |
 
 ---
 
@@ -81,3 +92,5 @@ Esta nota documenta de manera sistemática y continua todos los hallazgos técni
 - `a8f0b45`: Corrección sintáctica LaTeX e informe PDF compilado.
 - `f8a8475`: Corrección de parseo regex para estaciones CEAZAMET y acoplamiento de terreno.
 - `a860c6f`: Corrección de ponderación EnKF y reglas de coherencia física inviolables.
+- `bbc8be6`: Bitácora inicial de hallazgos y módulo ingestor `ingest_senapred.py`.
+- `7982143`: Refactorización de estabilización convexa, EMA adaptativo, histeresis del 8% y test suite `test_stability.py`.
