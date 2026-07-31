@@ -135,3 +135,19 @@ Esta nota documenta de manera sistemática y continua todos los hallazgos técni
 - **Impacto:** Al perder la telemetría de terreno, el modelo quedó dependiendo exclusivamente de los datos satelitales NRT (que tienen resolución más gruesa y latencia de ~30 min), perdiendo la capacidad de detectar acumulaciones locales en tiempo real.
 - **Lección Aprendida:** Se necesita un mecanismo de **resiliencia ante caída de fuentes de datos**, que al detectar la pérdida de CEAZAMET active automáticamente un factor de incertidumbre que aumente el score base como compensación (principio de precaución).
 - **Propuesta Post-Prueba:** Implementar `uncertainty_boost` cuando `ceazamet_available = False`: incrementar el score base un +15% como margen de seguridad ante falta de observación de terreno.
+
+---
+
+## 8. Hallazgos Adicionales y Cierre de la Primera Prueba (31 de Julio de 2026)
+
+- **Hallazgo 8 (Dispersión Espacial IDW):** Eliminación de falsas alarmas comunales al 100%, asignando precipitaciones interpoladas por estación física a cada micro-sector.
+- **Hallazgo 9 (Ingestor NLP de Noticias de Terreno):** Integración de reportes de noticias de medios locales y alertas SAE para sectores urbanos vulnerables (Las Compañías, Ruta 5, Pueblo Islón).
+- **Hallazgo 10 (Detección de Picos Transcurridos):** Escaneo de hidrograma ($t_{-12h}$ a $t_{+12h}$) que diagnostica la fase de recesión y drenaje seguro, reemplazando falsas proyecciones futuras.
+
+---
+
+## 9. Cierre Exitoso de la Primera Prueba del Sistema (19:39 hrs)
+
+- **Estado:** Finalizada exitosamente la Primera Prueba de Campo e Inferencia Hidrometeorológica para Proyecto Júpiter.
+- **Servidor:** Activo en background (`http://localhost:8000/`) sirviendo el Dashboard Táctico NRT.
+- **Repositorio:** 100% de los cambios commiteados y pusheados a GitHub (`main`).
