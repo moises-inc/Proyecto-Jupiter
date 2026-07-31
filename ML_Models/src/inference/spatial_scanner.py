@@ -207,11 +207,11 @@ def scan_full_la_serena_grid() -> dict:
         PREVIOUS_SCORES_EMA[key] = smooth_score
 
         # 4. Inviolable Physical Safety Safeguard Rules
-        # Exception: Do NOT cap river/quebrada sectors if upstream river surge is active (effective_hydro_q >= 2.0)
-        if not (is_river_quebrada and effective_hydro_q >= 2.0):
-            if precip_24h < 10.0 and effective_hydro_q < 1.0 and geotech_fs >= 1.0:
+        # Caps scores during light/moderate local rain unless a major surge occurs (effective_hydro_q >= 5.0)
+        if not (is_river_quebrada and effective_hydro_q >= 5.0):
+            if s_precip_24h < 10.0 and effective_hydro_q < 3.0 and geotech_fs >= 1.0:
                 smooth_score = min(smooth_score, 0.25)
-            elif precip_24h < 25.0 and effective_hydro_q < 5.0 and geotech_fs >= 1.0:
+            elif s_precip_24h < 25.0 and effective_hydro_q < 6.0 and geotech_fs >= 1.0:
                 smooth_score = min(smooth_score, 0.55)
 
         score_pct = round(smooth_score * 100.0, 1)
@@ -233,26 +233,35 @@ def scan_full_la_serena_grid() -> dict:
         else:
             if smooth_score >= 0.70:
                 semaforo = "ALERTA ROJA"
-            elif smooth_score >= 0.40:
+            elif smooth_score >= 0.35:
                 semaforo = "ALERTA AMARILLA"
             else:
                 semaforo = "VERDE ESTABLE"
 
         PREVIOUS_SEMAFORO_STATE[key] = semaforo
 
+        if semaforo == "ALERTA ROJA":
+            red_count += 1
+            transitability = "TRÁNSITO RESTRICTIVO (Evacuación Preventiva Activa)"
+        elif semaforo == "ALERTA AMARILLA":
+            yellow_count += 1
+            transitability = "PRECAUCIÓN VIAL (Monitoreo de Quebradas)"
+        else:
+            transitability = "TRANSITABLE (Condición Normal)"
+
         tc_hours = info["concentration_time_hours"]
         drain_hours = info.get("recovery_drain_hours", 2.0)
 
-        # Dynamic Forecast Peak & Safe Clearance Scanning
+        # Dynamic Forecast Peak & Safe Clearance Scanning across Multi-Model Ensemble
         future_df = features_df[features_df["time"] >= current_dt]
         active_rain_df = future_df[future_df["precipitation"] > 0.1]
-
+        
         if not active_rain_df.empty:
             peak_idx = active_rain_df["precipitation"].idxmax()
             peak_forecast_dt = pd.to_datetime(active_rain_df.loc[peak_idx, "time"])
             eta_impact = peak_forecast_dt + pd.Timedelta(hours=tc_hours)
             eta_impact_formatted = eta_impact.strftime("%d/%m/%Y %H:%M hrs")
-
+            
             last_rain_dt = pd.to_datetime(active_rain_df["time"].iloc[-1])
             eta_safe_return = last_rain_dt + pd.Timedelta(hours=drain_hours)
             eta_safe_formatted = eta_safe_return.strftime("%d/%m/%Y %H:%M hrs")
@@ -264,15 +273,6 @@ def scan_full_la_serena_grid() -> dict:
         else:
             eta_impact_formatted = "Sin Lluvia Prevista"
             eta_safe_formatted = "Condición Estable (Transitable)"
-
-        if semaforo == "ALERTA ROJA":
-            transitability = f"TRANSITO RESTRICTORIO (Hora de Paso Seguro (Calma): {eta_safe_formatted})"
-            red_count += 1
-        elif semaforo == "ALERTA AMARILLA":
-            transitability = f"PRECAUCIÓN VIAL (Hora de Paso Seguro (Calma): {eta_safe_formatted})"
-            yellow_count += 1
-        else:
-            transitability = "TRANSITABLE (Condición Normal)"
 
         scanned_sectors.append({
             "key": key,
@@ -303,8 +303,10 @@ def scan_full_la_serena_grid() -> dict:
 
     scanned_sectors.sort(key=lambda x: x["score_pct"], reverse=True)
 
-    if red_count > 0:
+    if red_count >= 2:
         commune_status = "ALERTA ROJA COMUNAL (EVACUACIÓN Y RESCATE PREVENTIVO ACTIVO)"
+    elif red_count == 1:
+        commune_status = "ALERTA AMARILLA COMUNAL CON ALERTA ROJA FOCALIZADA EN QUEBRADA"
     elif yellow_count > 0:
         commune_status = "ALERTA AMARILLA COMUNAL (PREPARACIÓN DE PUESTOS DE MANDO)"
     else:
