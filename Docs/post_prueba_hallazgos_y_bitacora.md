@@ -94,3 +94,28 @@ Esta nota documenta de manera sistemática y continua todos los hallazgos técni
 - `a860c6f`: Corrección de ponderación EnKF y reglas de coherencia física inviolables.
 - `bbc8be6`: Bitácora inicial de hallazgos y módulo ingestor `ingest_senapred.py`.
 - `7982143`: Refactorización de estabilización convexa, EMA adaptativo, histeresis del 8% y test suite `test_stability.py`.
+- `f079db5`: Registro de Hallazgo 5 sobre micro-variaciones dentro de banda Verde.
+
+---
+
+### 🔴 Hallazgo 6 (CRÍTICO): Crecida de Río en Pueblo Islón / El Romero Sin Detección Anticipada
+- **Fecha/Hora de Detección:** 31 de Julio de 2026, 12:14 PM
+- **Síntoma Observado:** Reportes de crecida de río, inundaciones en Islón, El Romero y quebradas adyacentes. El sistema mostraba solo un 25% de riesgo para esas zonas y no emitió anticipación.
+- **Causa Raíz Identificada (Doble Punto Ciego):**
+  1. **Regla de acotamiento rígida:** La regla de seguridad física acotaba el score a máximo 25% si $P_{24h} < 10\text{ mm}$ a nivel local. Pero la precipitación que genera la crecida cae en la cuenca alta (600-1200 m.s.n.m.) y baja por gravedad. El sensor NRT local asignado a Islón no detectaba esa lluvia.
+  2. **Escorrentía calculada solo con lluvia local:** `direct_Q` usaba únicamente la precipitación del sector específico, ignorando el caudal del río que baja de aguas arriba (`muskingum_q`) y la corrección EnKF de terreno.
+- **Solución Implementada:**
+  1. **Escorrentía Hidrológica Efectiva:** `effective_hydro_q = max(direct_Q, muskingum_q, enkf_corr)` — integra agua local + caudal fluvial aguas arriba.
+  2. **Excepción para Sectores de Río/Quebrada:** Los sectores clasificados como `Precordillera / Ribereño`, `Quebrada Norte`, `Valle Precordillerano` ya NO se acotan al 25% cuando hay crecida aguas arriba (`effective_hydro_q >= 2.0`).
+  3. **Boost de Urgencia Fluvial:** Si `effective_hydro_q >= 2.0` o `enkf_corr >= 5.0`, el score se eleva automáticamente a mínimo 75% (Alerta Roja).
+- **Lección Aprendida:** En cuencas semi-áridas como La Serena, la lluvia que genera inundaciones **no siempre cae donde inunda**. El modelo debe considerar siempre la propagación hidrológica aguas arriba-abajo.
+- **Archivos Modificados:** `ML_Models/src/inference/spatial_scanner.py`
+
+---
+
+### 🟠 Hallazgo 7: Interrupción del Servicio CEAZAMET Durante el Peak de la Tormenta
+- **Fecha/Hora de Detección:** 31 de Julio de 2026, 12:16 PM
+- **Síntoma Observado:** Las 7 estaciones CEAZAMET reportan `stations_online: 0` y `ceazamet_available: False`. El servicio se interrumpió justo durante el momento de mayor intensidad del frente.
+- **Impacto:** Al perder la telemetría de terreno, el modelo quedó dependiendo exclusivamente de los datos satelitales NRT (que tienen resolución más gruesa y latencia de ~30 min), perdiendo la capacidad de detectar acumulaciones locales en tiempo real.
+- **Lección Aprendida:** Se necesita un mecanismo de **resiliencia ante caída de fuentes de datos**, que al detectar la pérdida de CEAZAMET active automáticamente un factor de incertidumbre que aumente el score base como compensación (principio de precaución).
+- **Propuesta Post-Prueba:** Implementar `uncertainty_boost` cuando `ceazamet_available = False`: incrementar el score base un +15% como margen de seguridad ante falta de observación de terreno.

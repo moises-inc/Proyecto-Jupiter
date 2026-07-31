@@ -108,10 +108,13 @@ def scan_full_la_serena_grid() -> dict:
         phi_precip = min(1.0, precip_6h / 25.0)
         phi_api = min(1.0, api_72h / 40.0)
         phi_ml = base_ml_prob
-        phi_runoff = min(1.0, direct_Q / 12.0)
+        
+        # Effective Hydro Runoff: Accounts for both local SCS runoff AND upstream river surge (Muskingum / EnKF)
+        effective_hydro_q = max(direct_Q, muskingum_q, enkf_corr)
+        phi_runoff = min(1.0, effective_hydro_q / 10.0)
         phi_forecast = 0.4 * min(1.0, forecast_3h / 15.0) + 0.6 * min(1.0, forecast_6h / 20.0)
         phi_geotech = 1.0 / (1.0 + np.exp(8.0 * (geotech_fs - 1.0)))
-        phi_routing = min(1.0, muskingum_q / 40.0)
+        phi_routing = min(1.0, muskingum_q / 25.0)
 
         raw_convex_score = (
             0.25 * phi_precip +
@@ -122,6 +125,16 @@ def scan_full_la_serena_grid() -> dict:
             0.05 * phi_geotech +
             0.05 * phi_routing
         )
+
+        # Precordillera / River Quebrada Special Weighting
+        is_river_quebrada = info["type"] in [
+            "Precordillera / Ribereño", "Alta Precordillera", "Quebrada Norte", 
+            "Valle Precordillerano", "Cerros y Quebradas Norte", "Rural Interior"
+        ]
+        
+        if is_river_quebrada and (effective_hydro_q >= 2.0 or enkf_corr >= 5.0):
+            # Upstream river surge or mountain storm active -> boost precordillera risk score
+            raw_convex_score = max(raw_convex_score, 0.75)
 
         # 2. Apply Continuous Logistic Ceiling and Freezing Factor
         inst_score = min(1.0, raw_convex_score * logistic_ceiling * freezing_factor)
@@ -137,10 +150,12 @@ def scan_full_la_serena_grid() -> dict:
         PREVIOUS_SCORES_EMA[key] = smooth_score
 
         # 4. Inviolable Physical Safety Safeguard Rules
-        if precip_24h < 10.0 and direct_Q < 1.0 and geotech_fs >= 1.0:
-            smooth_score = min(smooth_score, 0.25)
-        elif precip_24h < 25.0 and direct_Q < 5.0 and geotech_fs >= 1.0:
-            smooth_score = min(smooth_score, 0.55)
+        # Exception: Do NOT cap river/quebrada sectors if upstream river surge is active (effective_hydro_q >= 2.0)
+        if not (is_river_quebrada and effective_hydro_q >= 2.0):
+            if precip_24h < 10.0 and effective_hydro_q < 1.0 and geotech_fs >= 1.0:
+                smooth_score = min(smooth_score, 0.25)
+            elif precip_24h < 25.0 and effective_hydro_q < 5.0 and geotech_fs >= 1.0:
+                smooth_score = min(smooth_score, 0.55)
 
         score_pct = round(smooth_score * 100.0, 1)
 
