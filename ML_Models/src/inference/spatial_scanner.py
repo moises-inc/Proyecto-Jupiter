@@ -15,6 +15,7 @@ from src.ingesters.ingest_sat_data import fetch_live_nrt_data
 from src.ingesters.ingest_ceazamet import get_ceazamet_ground_truth_summary
 from src.ingesters.ingest_senapred import get_chilean_agencies_summary
 from src.ingesters.ingest_multi_source import get_multi_source_weather_consensus
+from src.ingesters.ingest_news_reports import analyze_news_flood_impact
 from src.features.feature_engineering import generate_hydrological_features, FEATURE_COLUMNS
 from src.inference.live_inference import load_jupiter_model
 
@@ -138,6 +139,9 @@ def scan_full_la_serena_grid() -> dict:
 
     # Chilean Official Agencies Data Ingestion (SENAPRED & DMC)
     agency_summary = get_chilean_agencies_summary()
+    
+    # Real-Time Emergency Ground News & Reports NLP Ingestion
+    news_reports_dict = analyze_news_flood_impact()
 
     current_dt = pd.to_datetime(current_row["time"])
     scanned_sectors = []
@@ -156,6 +160,18 @@ def scan_full_la_serena_grid() -> dict:
         direct_Q = calculate_scs_direct_runoff(s_precip_24h, cn)
         freezing_factor = 1.3 if high_freezing == 1 and info["weight_freezing"] > 0.1 else 1.0
 
+        # Ground News & Citizen Flood Report Mapping
+        news_score = 0.0
+        for n_key, n_val in news_reports_dict.items():
+            k_norm = key.replace("ñ", "n").lower()
+            nk_norm = n_key.replace("ñ", "n").lower()
+            if nk_norm in k_norm or k_norm in nk_norm:
+                news_score = max(news_score, n_val)
+            elif "compani" in k_norm and "compani" in nk_norm:
+                news_score = max(news_score, n_val)
+            elif "ruta5" in k_norm and "ruta5" in nk_norm:
+                news_score = max(news_score, n_val)
+
         # Continuous Sector Logistic Ceiling C(P_sector)
         logistic_ceiling = 0.25 + (0.75 / (1.0 + np.exp(-0.25 * (s_precip_24h - 15.0))))
 
@@ -172,15 +188,20 @@ def scan_full_la_serena_grid() -> dict:
         phi_routing = min(1.0, muskingum_q / 25.0)
 
         raw_convex_score = (
-            0.25 * phi_precip +
-            0.20 * phi_api +
+            0.22 * phi_precip +
+            0.18 * phi_api +
             0.15 * phi_ml +
             0.15 * phi_runoff +
-            0.15 * phi_forecast +
+            0.10 * phi_forecast +
             0.05 * phi_geotech +
             0.05 * phi_routing +
-            0.05 * min(1.0, enkf_corr / 10.0)
+            0.05 * min(1.0, enkf_corr / 10.0) +
+            0.05 * news_score
         )
+
+        # Ground Report Boost: If citizens/news report active flooding in Las Compañías / Ruta 5
+        if news_score >= 0.7:
+            raw_convex_score = max(raw_convex_score, 0.70)
 
         # Precordillera / River Quebrada Special Weighting
         is_river_quebrada = info["type"] in [
@@ -207,8 +228,8 @@ def scan_full_la_serena_grid() -> dict:
         PREVIOUS_SCORES_EMA[key] = smooth_score
 
         # 4. Inviolable Physical Safety Safeguard Rules
-        # Caps scores during light/moderate local rain unless a major surge occurs (effective_hydro_q >= 5.0)
-        if not (is_river_quebrada and effective_hydro_q >= 5.0):
+        # Caps scores during light/moderate local rain unless a major surge (effective_hydro_q >= 5.0) or ACTIVE NEWS FLOOD REPORT is present
+        if not (is_river_quebrada and effective_hydro_q >= 5.0) and news_score < 0.7:
             if s_precip_24h < 10.0 and effective_hydro_q < 3.0 and geotech_fs >= 1.0:
                 smooth_score = min(smooth_score, 0.25)
             elif s_precip_24h < 25.0 and effective_hydro_q < 6.0 and geotech_fs >= 1.0:
