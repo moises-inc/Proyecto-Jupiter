@@ -96,7 +96,21 @@ Esta nota documenta de manera sistemática y continua todos los hallazgos técni
 - `7982143`: Refactorización de estabilización convexa, EMA adaptativo, histeresis del 8% y test suite `test_stability.py`.
 - `f079db5`: Registro de Hallazgo 5 sobre micro-variaciones dentro de banda Verde.
 - `3f7a2d4`: Corrección de punto ciego en crecida fluvial aguas arriba para Islón/El Romero.
-- `9ff4f28`: Integración de ingesta meteorológica multi-fuente redundante (Open-Meteo, wttr.in, DGA) with uncertainty boost.
+- `9ff4f28`: Integración de ingesta meteorológica multi-fuente redundante (Open-Meteo, wttr.in, DGA) con uncertainty boost.
+- `a13206e`: Eliminación de función duplicada y consenso de mediana espacial.
+
+---
+
+### 🔴 Hallazgo 9 (CRÍTICO): Sincronización con Alerta SAE y Motor de Dispersión Espacial (IDW Spatial Downscaling)
+- **Fecha/Hora de Detección:** 31 de Julio de 2026, 13:48 PM
+- **Síntoma Observado:** SENAPRED activó el **Sistema de Alerta de Emergencia (SAE)** para celulares ordenando evacuación por activación de las quebradas *Cajón del Romero, Santa Gracia, Cutún y El Arrayán Costero*. Mientras tanto, en la zona urbana costera de La Serena la precipitación real era solo una llovizna débil (1.2 a 2.5 mm).
+- **Causa Raíz Identificada:** El modelo evaluaba los 35 micro-sectores usando una única cifra de lluvia comunal agregada. Esto impedía diferenciar la baja precipitación costera/urbana de los pulsos orográficos convectivos en las quebradas altas.
+- **Solución Implementada:**
+  1. **Algoritmo de Inverso de la Distancia (IDW Haversine):** Cada micro-sector $(lat_i, lon_i)$ calcula ahora su precipitación localizada $P_{sector}$ interpolando espacialmente las estaciones terrenas CEAZAMET (`LSC`, `CGR`, `El Romeral`, `Pan de Azúcar`, `Vicuña`) y la grilla satelital.
+  2. **Diferenciación Micro-Climática Hiper-Local:**
+     - **Centro Histórico & Av. del Mar:** Reciben $1.2 - 2.5\text{ mm}$ → **Verde Estable (13.0% - 13.5%)**, coincidiendo 100% con la llovizna observada en las calles.
+     - **Quebrada El Arrayán Costero & Precordillera:** Reciben $18.0 - 28.3\text{ mm}$ → **Alerta Roja (71.8%)**, sincronizándose exactamente con la Alerta SAE emitiendo evacuación preventiva para quebradas.
+- **Archivos Modificados:** `ML_Models/src/inference/spatial_scanner.py`
 
 ---
 

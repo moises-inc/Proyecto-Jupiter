@@ -7,6 +7,7 @@ forecast lead-times (+1h/+3h/+6h), ETA of Impact, and ETA of Safe Return (Calma 
 
 import os
 import datetime
+from typing import Optional, Tuple, Dict
 import pandas as pd
 import numpy as np
 
@@ -17,6 +18,9 @@ from src.ingesters.ingest_multi_source import get_multi_source_weather_consensus
 from src.features.feature_engineering import generate_hydrological_features, FEATURE_COLUMNS
 from src.inference.live_inference import load_jupiter_model
 
+
+LA_SERENA_LAT = -29.897
+LA_SERENA_LON = -71.253
 
 # Persistent Global EMA State Memory for Risk Scores (Prevents alert flickering)
 PREVIOUS_SCORES_EMA = {}
@@ -32,6 +36,53 @@ def calculate_scs_direct_runoff(precip_24h_mm: float, cn: float) -> float:
         return 0.0
     P_minus_Ia = precip_24h_mm - Ia
     return (P_minus_Ia ** 2) / (precip_24h_mm + 0.8 * S)
+
+
+def haversine_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    R = 6371.0
+    dlat = np.radians(lat2 - lat1)
+    dlon = np.radians(lon2 - lon1)
+    a = np.sin(dlat / 2.0)**2 + np.cos(np.radians(lat1)) * np.cos(np.radians(lat2)) * np.sin(dlon / 2.0)**2
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+    return float(R * c)
+
+
+def calculate_idw_sector_precipitation(
+    sector_lat: float, sector_lon: float,
+    ceazamet_df: Optional[pd.DataFrame],
+    consensus_precip_24h: float
+) -> Tuple[float, float]:
+    """
+    Computes localized sector precipitation (24h and 6h) using Inverse Distance Weighting (IDW)
+    from CEAZAMET ground stations and multi-source consensus.
+    Differentiates urban coastal drizzle (1-3mm) from mountain precordillera storms (15-28mm).
+    """
+    if ceazamet_df is None or ceazamet_df.empty:
+        return consensus_precip_24h, min(consensus_precip_24h, consensus_precip_24h * 0.6)
+
+    weights = []
+    values = []
+
+    for _, row in ceazamet_df.iterrows():
+        st_lat = float(row.get("lat", 0.0))
+        st_lon = float(row.get("lon", 0.0))
+        st_p = float(row.get("precipitation_mm", 0.0) or 0.0)
+
+        if st_lat != 0.0 and st_lon != 0.0:
+            dist = haversine_distance_km(sector_lat, sector_lon, st_lat, st_lon)
+            w = 1.0 / ((dist + 0.5) ** 2)
+            weights.append(w)
+            values.append(st_p)
+
+    if weights and sum(weights) > 0:
+        p_idw = float(np.sum(np.array(weights) * np.array(values)) / np.sum(weights))
+        # Blend 70% IDW station reading with 30% consensus for robust smoothing
+        sector_p_24h = round(0.7 * p_idw + 0.3 * consensus_precip_24h, 2)
+    else:
+        sector_p_24h = consensus_precip_24h
+
+    sector_p_6h = round(min(sector_p_24h, sector_p_24h * 0.7), 2)
+    return sector_p_24h, sector_p_6h
 
 
 def get_current_nrt_row(features_df: pd.DataFrame) -> pd.Series:
@@ -82,28 +133,11 @@ def scan_full_la_serena_grid() -> dict:
     consensus_precip = float(multi_source.get("consensus_precip_24h_mm", 0.0))
     uncertainty_boost = float(multi_source.get("uncertainty_boost_factor", 0.0))
 
-    # Blend with CEAZAMET ground-truth observations using Robust Spatial Consensus
-    _, ceazamet_summary = get_ceazamet_ground_truth_summary()
-    if ceazamet_summary.get("ceazamet_available"):
-        obs_avg = float(ceazamet_summary.get("communal_avg_precipitation_mm", 0.0))
-        obs_peak = float(ceazamet_summary.get("peak_precipitation_mm", 0.0))
-        peak_station = ceazamet_summary.get("peak_station", "")
-
-        # Robust Consensus: Average of communal observations and multi-provider models
-        # Prevents a single isolated mountain station (e.g. El Romeral 28.3mm) from inflating the entire urban grid
-        valid_sources = [p for p in [precip_24h, consensus_precip, obs_avg] if p > 0.0]
-        precip_24h = float(np.median(valid_sources)) if valid_sources else precip_24h
-        precip_6h = min(precip_24h, max(precip_6h, consensus_precip * 0.6))
-    else:
-        precip_24h = max(precip_24h, consensus_precip)
-        precip_6h = max(precip_6h, consensus_precip * 0.6)
+    # Fetch CEAZAMET ground-truth stations dataframe for IDW spatial downscaling
+    ceazamet_df, ceazamet_summary = get_ceazamet_ground_truth_summary()
 
     # Chilean Official Agencies Data Ingestion (SENAPRED & DMC)
     agency_summary = get_chilean_agencies_summary()
-
-    # Continuous Logistic Ceiling C(P_24h) in [0.25, 1.0]
-    # Prevents false alarms during light drizzle while scaling smoothly during heavy storms
-    logistic_ceiling = 0.25 + (0.75 / (1.0 + np.exp(-0.25 * (precip_24h - 15.0))))
 
     current_dt = pd.to_datetime(current_row["time"])
     scanned_sectors = []
@@ -111,12 +145,22 @@ def scan_full_la_serena_grid() -> dict:
     yellow_count = 0
 
     for key, info in LA_SERENA_SECTOR_GRID.items():
+        # Sector-specific IDW Spatial Downscaling of Precipitation
+        s_lat = info.get("lat", LA_SERENA_LAT)
+        s_lon = info.get("lon", LA_SERENA_LON)
+        s_precip_24h, s_precip_6h = calculate_idw_sector_precipitation(
+            s_lat, s_lon, ceazamet_df, consensus_precip
+        )
+
         cn = info.get("scs_cn", 80)
-        direct_Q = calculate_scs_direct_runoff(precip_24h, cn)
+        direct_Q = calculate_scs_direct_runoff(s_precip_24h, cn)
         freezing_factor = 1.3 if high_freezing == 1 and info["weight_freezing"] > 0.1 else 1.0
 
+        # Continuous Sector Logistic Ceiling C(P_sector)
+        logistic_ceiling = 0.25 + (0.75 / (1.0 + np.exp(-0.25 * (s_precip_24h - 15.0))))
+
         # 1. Convex Normalized Base Score (Sum of weights = 1.00)
-        phi_precip = min(1.0, precip_6h / 25.0)
+        phi_precip = min(1.0, s_precip_6h / 25.0)
         phi_api = min(1.0, api_72h / 40.0)
         phi_ml = base_ml_prob
         
