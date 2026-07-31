@@ -12,8 +12,246 @@ import numpy as np
 
 from src.ingesters.ingest_sat_data import fetch_live_nrt_data
 from src.ingesters.ingest_ceazamet import get_ceazamet_ground_truth_summary
+from src.ingesters.ingest_senapred import get_chilean_agencies_summary
 from src.features.feature_engineering import generate_hydrological_features, FEATURE_COLUMNS
 from src.inference.live_inference import load_jupiter_model
+
+
+# Persistent Global EMA State Memory for Risk Scores (Prevents alert flickering)
+PREVIOUS_SCORES_EMA = {}
+PREVIOUS_SEMAFORO_STATE = {}
+
+
+def calculate_scs_direct_runoff(precip_24h_mm: float, cn: float) -> float:
+    if precip_24h_mm <= 0.0 or cn <= 0:
+        return 0.0
+    S = (25400.0 / cn) - 254.0
+    Ia = 0.2 * S
+    if precip_24h_mm <= Ia:
+        return 0.0
+    P_minus_Ia = precip_24h_mm - Ia
+    return (P_minus_Ia ** 2) / (precip_24h_mm + 0.8 * S)
+
+
+def get_current_nrt_row(features_df: pd.DataFrame) -> pd.Series:
+    now_dt = datetime.datetime.now()
+    if "time" in features_df.columns:
+        past_df = features_df[features_df["time"] <= now_dt]
+        if not past_df.empty:
+            return past_df.iloc[-1]
+    return features_df.iloc[-1]
+
+
+def scan_full_la_serena_grid() -> dict:
+    global PREVIOUS_SCORES_EMA, PREVIOUS_SEMAFORO_STATE
+
+    raw_df = fetch_live_nrt_data()
+    features_df = generate_hydrological_features(raw_df)
+    model, feature_cols = load_jupiter_model()
+    current_row = get_current_nrt_row(features_df)
+    valid_cols = [col for col in feature_cols if col in current_row.index]
+    X_current = pd.DataFrame([[current_row[c] for c in valid_cols]], columns=valid_cols)
+
+    if hasattr(model, "predict_proba"):
+        probs = model.predict_proba(X_current)[0]
+        classes = list(model.classes_)
+        base_ml_prob = float(probs[classes.index(1)]) if 1 in classes else 0.0
+    else:
+        base_ml_prob = float(model.predict(X_current)[0])
+
+    precip_24h = float(current_row.get("precip_accum_24h", 0.0))
+    precip_6h = float(current_row.get("precip_accum_6h", 0.0))
+    api_72h = float(current_row.get("api_72h", 0.0))
+    high_freezing = float(current_row.get("high_freezing_level_flag", 0))
+
+    forecast_1h = float(current_row.get("precip_forecast_1h", 0.0))
+    forecast_3h = float(current_row.get("precip_forecast_3h", 0.0))
+    forecast_6h = float(current_row.get("precip_forecast_6h", 0.0))
+    forecast_12h = float(current_row.get("precip_forecast_12h", 0.0))
+    forecast_24h = float(current_row.get("precip_forecast_24h", 0.0))
+
+    nowcast_rate = float(current_row.get("nowcast_rain_rate", 0.0))
+    geotech_fs = float(current_row.get("geotech_fs", 2.0))
+    muskingum_q = float(current_row.get("muskingum_cunge_q", 0.0))
+    phys_constraint = float(current_row.get("physics_informed_constraint", 0.0))
+    enkf_corr = float(current_row.get("enkf_assimilation_correction", 0.0))
+
+    # Blend with CEAZAMET ground-truth observations in real-time
+    _, ceazamet_summary = get_ceazamet_ground_truth_summary()
+    if ceazamet_summary.get("ceazamet_available"):
+        obs_peak = float(ceazamet_summary.get("peak_precipitation_mm", 0.0))
+        obs_avg = float(ceazamet_summary.get("communal_avg_precipitation_mm", 0.0))
+        ground_obs = max(obs_peak, obs_avg)
+        nowcast_rate = max(nowcast_rate, ground_obs)
+        enkf_corr = max(enkf_corr, ground_obs)
+        precip_24h = max(precip_24h, ground_obs)
+        precip_6h = max(precip_6h, ground_obs)
+
+    # Chilean Official Agencies Data Ingestion (SENAPRED & DMC)
+    agency_summary = get_chilean_agencies_summary()
+
+    # Continuous Logistic Ceiling C(P_24h) in [0.25, 1.0]
+    # Prevents false alarms during light drizzle while scaling smoothly during heavy storms
+    logistic_ceiling = 0.25 + (0.75 / (1.0 + np.exp(-0.25 * (precip_24h - 15.0))))
+
+    current_dt = pd.to_datetime(current_row["time"])
+    scanned_sectors = []
+    red_count = 0
+    yellow_count = 0
+
+    for key, info in LA_SERENA_SECTOR_GRID.items():
+        cn = info.get("scs_cn", 80)
+        direct_Q = calculate_scs_direct_runoff(precip_24h, cn)
+        freezing_factor = 1.3 if high_freezing == 1 and info["weight_freezing"] > 0.1 else 1.0
+
+        # 1. Convex Normalized Base Score (Sum of weights = 1.00)
+        phi_precip = min(1.0, precip_6h / 25.0)
+        phi_api = min(1.0, api_72h / 40.0)
+        phi_ml = base_ml_prob
+        phi_runoff = min(1.0, direct_Q / 12.0)
+        phi_forecast = 0.4 * min(1.0, forecast_3h / 15.0) + 0.6 * min(1.0, forecast_6h / 20.0)
+        phi_geotech = 1.0 / (1.0 + np.exp(8.0 * (geotech_fs - 1.0)))
+        phi_routing = min(1.0, muskingum_q / 40.0)
+
+        raw_convex_score = (
+            0.25 * phi_precip +
+            0.20 * phi_api +
+            0.15 * phi_ml +
+            0.15 * phi_runoff +
+            0.15 * phi_forecast +
+            0.05 * phi_geotech +
+            0.05 * phi_routing
+        )
+
+        # 2. Apply Continuous Logistic Ceiling and Freezing Factor
+        inst_score = min(1.0, raw_convex_score * logistic_ceiling * freezing_factor)
+
+        # 3. Asymmetric Adaptive EMA Temporal Smoothing
+        prev_ema = PREVIOUS_SCORES_EMA.get(key, inst_score)
+        if inst_score >= prev_ema:
+            alpha = 0.45  # Rapid adaptation when risk increases
+        else:
+            alpha = 0.10  # Gradual decay memory when storm recedes
+
+        smooth_score = alpha * inst_score + (1.0 - alpha) * prev_ema
+        PREVIOUS_SCORES_EMA[key] = smooth_score
+
+        # 4. Inviolable Physical Safety Safeguard Rules
+        if precip_24h < 10.0 and direct_Q < 1.0 and geotech_fs >= 1.0:
+            smooth_score = min(smooth_score, 0.25)
+        elif precip_24h < 25.0 and direct_Q < 5.0 and geotech_fs >= 1.0:
+            smooth_score = min(smooth_score, 0.55)
+
+        score_pct = round(smooth_score * 100.0, 1)
+
+        # 5. Alert Hysteresis Bands (8% Buffer)
+        prev_state = PREVIOUS_SEMAFORO_STATE.get(key, "VERDE ESTABLE")
+        if prev_state == "ALERTA ROJA":
+            if smooth_score < 0.62:
+                semaforo = "ALERTA AMARILLA" if smooth_score >= 0.33 else "VERDE ESTABLE"
+            else:
+                semaforo = "ALERTA ROJA"
+        elif prev_state == "ALERTA AMARILLA":
+            if smooth_score >= 0.70:
+                semaforo = "ALERTA ROJA"
+            elif smooth_score < 0.33:
+                semaforo = "VERDE ESTABLE"
+            else:
+                semaforo = "ALERTA AMARILLA"
+        else:
+            if smooth_score >= 0.70:
+                semaforo = "ALERTA ROJA"
+            elif smooth_score >= 0.40:
+                semaforo = "ALERTA AMARILLA"
+            else:
+                semaforo = "VERDE ESTABLE"
+
+        PREVIOUS_SEMAFORO_STATE[key] = semaforo
+
+        tc_hours = info["concentration_time_hours"]
+        drain_hours = info.get("recovery_drain_hours", 2.0)
+
+        # Dynamic Forecast Peak & Safe Clearance Scanning
+        future_df = features_df[features_df["time"] >= current_dt]
+        active_rain_df = future_df[future_df["precipitation"] > 0.1]
+
+        if not active_rain_df.empty:
+            peak_idx = active_rain_df["precipitation"].idxmax()
+            peak_forecast_dt = pd.to_datetime(active_rain_df.loc[peak_idx, "time"])
+            eta_impact = peak_forecast_dt + pd.Timedelta(hours=tc_hours)
+            eta_impact_formatted = eta_impact.strftime("%d/%m/%Y %H:%M hrs")
+
+            last_rain_dt = pd.to_datetime(active_rain_df["time"].iloc[-1])
+            eta_safe_return = last_rain_dt + pd.Timedelta(hours=drain_hours)
+            eta_safe_formatted = eta_safe_return.strftime("%d/%m/%Y %H:%M hrs")
+        elif smooth_score > 0.3:
+            eta_impact = current_dt + pd.Timedelta(hours=tc_hours)
+            eta_impact_formatted = eta_impact.strftime("%d/%m/%Y %H:%M hrs")
+            eta_safe_return = eta_impact + pd.Timedelta(hours=drain_hours + 2.0)
+            eta_safe_formatted = eta_safe_return.strftime("%d/%m/%Y %H:%M hrs")
+        else:
+            eta_impact_formatted = "Sin Lluvia Prevista"
+            eta_safe_formatted = "Condición Estable (Transitable)"
+
+        if semaforo == "ALERTA ROJA":
+            transitability = f"TRANSITO RESTRICTORIO (Hora de Paso Seguro (Calma): {eta_safe_formatted})"
+            red_count += 1
+        elif semaforo == "ALERTA AMARILLA":
+            transitability = f"PRECAUCIÓN VIAL (Hora de Paso Seguro (Calma): {eta_safe_formatted})"
+            yellow_count += 1
+        else:
+            transitability = "TRANSITABLE (Condición Normal)"
+
+        scanned_sectors.append({
+            "key": key,
+            "name": info["name"],
+            "type": info["type"],
+            "elevation_m": info["elevation_m"],
+            "radius_m": info["radius_m"],
+            "disaster_type": info["disaster_type"],
+            "concentration_time_hours": tc_hours,
+            "recovery_drain_hours": drain_hours,
+            "eta_impact": eta_impact_formatted,
+            "eta_safe_return": eta_safe_formatted,
+            "transitability_status": transitability,
+            "scs_curve_number": cn,
+            "agua_acumulada_superficie": round(direct_Q, 2),
+            "forecast_1h": round(forecast_1h, 1),
+            "forecast_3h": round(forecast_3h, 1),
+            "forecast_6h": round(forecast_6h, 1),
+            "forecast_12h": round(forecast_12h, 1),
+            "forecast_24h": round(forecast_24h, 1),
+            "score_pct": score_pct,
+            "geotech_fs": round(geotech_fs, 2),
+            "nowcast_rain_rate": round(nowcast_rate, 2),
+            "muskingum_q": round(muskingum_q, 2),
+            "semaforo": semaforo,
+            "coordinates": {"lat": info["lat"], "lon": info["lon"]}
+        })
+
+    scanned_sectors.sort(key=lambda x: x["score_pct"], reverse=True)
+
+    if red_count > 0:
+        commune_status = "ALERTA ROJA COMUNAL (EVACUACIÓN Y RESCATE PREVENTIVO ACTIVO)"
+    elif yellow_count > 0:
+        commune_status = "ALERTA AMARILLA COMUNAL (PREPARACIÓN DE PUESTOS DE MANDO)"
+    else:
+        commune_status = "ALERTA VERDE COMUNAL (CONDICIONES ESTABLES)"
+
+    return {
+        "timestamp": str(current_row["time"]),
+        "total_sectors_scanned": len(scanned_sectors),
+        "commune_status": commune_status,
+        "telemetry_summary": {
+            "precip_accum_24h_mm": round(precip_24h, 1),
+            "precip_accum_6h_mm": round(precip_6h, 1),
+            "api_soil_saturation": round(api_72h, 1),
+            "freezing_level_m": round(float(current_row["freezing_level_scaled"] * 1000.0), 0)
+        },
+        "ceazamet_telemetry": ceazamet_summary,
+        "chilean_official_agencies": agency_summary,
+        "sectors": scanned_sectors
+    }
 
 
 # 20 High-Resolution Geographic Sectors with calibrated WGS84, SCS-CN, and Clearance Recovery times
