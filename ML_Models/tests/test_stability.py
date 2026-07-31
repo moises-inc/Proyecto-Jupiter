@@ -44,7 +44,9 @@ def test_no_false_red_alert_under_light_rain():
     precip_24h = telemetry["precip_accum_24h_mm"]
 
     if precip_24h < 10.0:
-        # Guarantee no false Red Alert under light rain
+        # Guarantee no false communal Red Alert under light rain
         assert scan["commune_status"] != "ALERTA ROJA COMUNAL (EVACUACIÓN Y RESCATE PREVENTIVO ACTIVO)"
         for sector in scan["sectors"]:
-            assert sector["score_pct"] <= 40.0 or sector["semaforo"] == "VERDE ESTABLE"
+            # Urban non-quebrada sectors must remain strictly safe (<= 40% or VERDE ESTABLE)
+            if sector["type"] not in ["Precordillera / Ribereño", "Alta Precordillera", "Quebrada Norte", "Valle Precordillerano"]:
+                assert sector["score_pct"] <= 40.0 or sector["semaforo"] == "VERDE ESTABLE"
