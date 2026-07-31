@@ -2,6 +2,15 @@
 
 Inspirado en Júpiter Pluvio (dios romano de la lluvia y las nubes). Este proyecto es un sistema de alerta temprana e inteligencia hidrometeorológica en tiempo real para La Serena, Chile, utilizando datos satelitales.
 
+## ⚡ Novedades en Arquitectura v6.0
+
+La nueva versión 6.0 incorpora los siguientes módulos avanzados para un análisis de riesgo de última generación:
+1. **Nowcasting Radar (dBZ a mm/h):** Estimación a muy corto plazo utilizando la relación de Marshall-Palmer.
+2. **Factor de Seguridad Geotécnico (FS):** Cálculo de estabilidad de laderas integrando el modelo de talud infinito dependiente de saturación.
+3. **Enrutamiento Hidrológico Muskingum-Cunge:** Propagación de onda cinemática para caudal a través de las 35 micro-zonas.
+4. **Restricciones Físicas Informadas (PINNs):** Ecuaciones de conservación de masa de Saint-Venant aplicadas como restricciones al modelo.
+5. **Asimilación de Datos (EnKF):** Filtro de Kalman por Ensambles para calibrar los estados de manera dinámica con sensores IoT.
+
 ## Arquitectura del Sistema
 
 ```mermaid

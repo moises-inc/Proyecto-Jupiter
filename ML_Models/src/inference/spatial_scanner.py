@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 
 from src.ingesters.ingest_sat_data import fetch_live_nrt_data
+from src.ingesters.ingest_ceazamet import get_ceazamet_ground_truth_summary
 from src.features.feature_engineering import generate_hydrological_features, FEATURE_COLUMNS
 from src.inference.live_inference import load_jupiter_model
 
@@ -431,9 +432,9 @@ def scan_full_la_serena_grid() -> dict:
     raw_df = fetch_live_nrt_data()
     features_df = generate_hydrological_features(raw_df)
     model, feature_cols = load_jupiter_model()
-
     current_row = get_current_nrt_row(features_df)
-    X_current = pd.DataFrame([current_row[feature_cols]])
+    valid_cols = [col for col in feature_cols if col in current_row.index]
+    X_current = pd.DataFrame([[current_row[c] for c in valid_cols]], columns=valid_cols)
 
     if hasattr(model, "predict_proba"):
         probs = model.predict_proba(X_current)[0]
@@ -452,6 +453,14 @@ def scan_full_la_serena_grid() -> dict:
     forecast_6h = float(current_row.get("precip_forecast_6h", 0.0))
     forecast_12h = float(current_row.get("precip_forecast_12h", 0.0))
     forecast_24h = float(current_row.get("precip_forecast_24h", 0.0))
+
+    # 5 New Predictive Features (Integrated)
+    nowcast_rate = float(current_row.get("nowcast_rain_rate", 0.0))
+    geotech_fs = float(current_row.get("geotech_fs", 2.0))
+    muskingum_q = float(current_row.get("muskingum_cunge_q", 0.0))
+    phys_constraint = float(current_row.get("physics_informed_constraint", 0.0))
+    enkf_corr = float(current_row.get("enkf_assimilation_correction", 0.0))
+
 
     precip_signal = np.clip((precip_24h + precip_6h * 2.0) / 15.0, 0.0, 1.0)
     soil_signal = np.clip(api_72h / 15.0, 0.0, 1.0)
@@ -476,8 +485,19 @@ def scan_full_la_serena_grid() -> dict:
             0.1 * min(1.0, direct_Q / 10.0) +
             0.1 * min(1.0, forecast_3h / 15.0) +
             0.15 * min(1.0, forecast_6h / 15.0) +
-            0.1 * min(1.0, forecast_12h / 20.0)
+            0.1 * min(1.0, forecast_12h / 20.0) +
+            0.05 * min(1.0, nowcast_rate / 10.0) + 
+            0.05 * min(1.0, muskingum_q / 50.0) +
+            enkf_corr
         )
+        
+        # Physics-informed geotech override
+        if geotech_fs < 1.0 and info['type'] in ['Ladera / Faldeo', 'Alta Precordillera', 'Cerros y Quebradas Norte']:
+            base_score = max(base_score, 0.85)
+        
+        # Apply physics-informed constraint penalty if mass conservation fails (e.g., phys_constraint is high)
+        if phys_constraint > 10.0:
+            base_score += 0.05
         
         score = min(1.0, base_score * water_presence * freezing_factor)
         score_pct = round(score * 100.0, 1)
@@ -540,7 +560,10 @@ def scan_full_la_serena_grid() -> dict:
             "forecast_6h": round(forecast_6h, 1),
             "forecast_12h": round(forecast_12h, 1),
             "forecast_24h": round(forecast_24h, 1),
-            "score_pct": score_pct,
+"score_pct": score_pct,
+            "geotech_fs": round(geotech_fs, 2),
+            "nowcast_rain_rate": round(nowcast_rate, 2),
+            "muskingum_q": round(muskingum_q, 2),
             "semaforo": semaforo,
             "coordinates": {"lat": info["lat"], "lon": info["lon"]}
         })
@@ -554,6 +577,8 @@ def scan_full_la_serena_grid() -> dict:
     else:
         commune_status = "ALERTA VERDE COMUNAL (CONDICIONES ESTABLES)"
 
+    _, ceazamet_summary = get_ceazamet_ground_truth_summary()
+
     return {
         "timestamp": str(current_row["time"]),
         "total_sectors_scanned": len(scanned_sectors),
@@ -564,6 +589,7 @@ def scan_full_la_serena_grid() -> dict:
             "api_soil_saturation": round(api_72h, 1),
             "freezing_level_m": round(float(current_row["freezing_level_scaled"] * 1000.0), 0)
         },
+        "ceazamet_telemetry": ceazamet_summary,
         "sectors": scanned_sectors
     }
 
