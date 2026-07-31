@@ -294,12 +294,12 @@ def scan_full_la_serena_grid() -> dict:
                 hours_since_peak = round(minutes_since_peak / 60.0, 1)
 
                 if current_dt >= safe_drain_dt:
-                    eta_impact_formatted = f"PICO TRANSCURRIDO ({hydro_peak_dt.strftime('%H:%M hrs')} - En Fase de Calma)"
+                    eta_impact_formatted = f"punto máximo transcurrido ({hydro_peak_dt.strftime('%H:%M hrs')} - En Fase de Calma)"
                     eta_safe_formatted = f"PASO SEGURO ACTIVO (Drenado desde {safe_drain_dt.strftime('%H:%M hrs')})"
                     if semaforo != "ALERTA ROJA":
                         transitability = "TRANSITABLE (Fase de Calma Expirada)"
                 else:
-                    eta_impact_formatted = f"PICO TRANSCURRIDO (Ocurrió {hydro_peak_dt.strftime('%H:%M hrs')} - Hace {hours_since_peak}h)"
+                    eta_impact_formatted = f"punto máximo transcurrido (Ocurrió {hydro_peak_dt.strftime('%H:%M hrs')} - Hace {hours_since_peak}h)"
                     eta_safe_formatted = f"En Recesión/Drenaje (Paso Seguro: {safe_drain_dt.strftime('%H:%M hrs')})"
                     if semaforo == "ALERTA ROJA":
                         transitability = f"EVACUACIÓN EN RECESIÓN (Drenaje Activo hasta {safe_drain_dt.strftime('%H:%M hrs')})"
