@@ -13,6 +13,7 @@ import numpy as np
 from src.ingesters.ingest_sat_data import fetch_live_nrt_data
 from src.ingesters.ingest_ceazamet import get_ceazamet_ground_truth_summary
 from src.ingesters.ingest_senapred import get_chilean_agencies_summary
+from src.ingesters.ingest_multi_source import get_multi_source_weather_consensus
 from src.features.feature_engineering import generate_hydrological_features, FEATURE_COLUMNS
 from src.inference.live_inference import load_jupiter_model
 
@@ -87,6 +88,15 @@ def scan_full_la_serena_grid() -> dict:
         precip_24h = max(precip_24h, ground_obs)
         precip_6h = max(precip_6h, ground_obs)
 
+    # Multi-Source Redundant Weather Consensus (Open-Meteo, wttr.in, DGA)
+    multi_source = get_multi_source_weather_consensus()
+    consensus_precip = float(multi_source.get("consensus_precip_24h_mm", 0.0))
+    uncertainty_boost = float(multi_source.get("uncertainty_boost_factor", 0.0))
+
+    # Override precipitation with the MAXIMUM from all sources (conservative principle)
+    precip_24h = max(precip_24h, consensus_precip)
+    precip_6h = max(precip_6h, consensus_precip * 0.6)  # Approx 60% of 24h falls in active 6h window
+
     # Chilean Official Agencies Data Ingestion (SENAPRED & DMC)
     agency_summary = get_chilean_agencies_summary()
 
@@ -137,7 +147,8 @@ def scan_full_la_serena_grid() -> dict:
             raw_convex_score = max(raw_convex_score, 0.75)
 
         # 2. Apply Continuous Logistic Ceiling and Freezing Factor
-        inst_score = min(1.0, raw_convex_score * logistic_ceiling * freezing_factor)
+        # Apply uncertainty boost when data sources are offline (precautionary principle)
+        inst_score = min(1.0, raw_convex_score * logistic_ceiling * freezing_factor + uncertainty_boost)
 
         # 3. Asymmetric Adaptive EMA Temporal Smoothing
         prev_ema = PREVIOUS_SCORES_EMA.get(key, inst_score)
@@ -265,6 +276,7 @@ def scan_full_la_serena_grid() -> dict:
         },
         "ceazamet_telemetry": ceazamet_summary,
         "chilean_official_agencies": agency_summary,
+        "multi_source_weather": multi_source,
         "sectors": scanned_sectors
     }
 
