@@ -138,7 +138,7 @@ def fetch_ceazamet_station_data(e_cod: str) -> Dict:
         response = requests.get(
             CEAZAMET_BASE_URL,
             params={"e_cod": e_cod},
-            timeout=10
+            timeout=3
         )
         response.raise_for_status()
         parsed = parse_ceazamet_html(response.text, e_cod)

@@ -499,7 +499,7 @@ def scan_full_la_serena_grid() -> dict:
             0.1 * min(1.0, forecast_12h / 20.0) +
             0.05 * min(1.0, nowcast_rate / 10.0) + 
             0.05 * min(1.0, muskingum_q / 50.0) +
-            enkf_corr
+            0.05 * min(1.0, enkf_corr / 10.0)
         )
         
         # Physics-informed geotech override
@@ -511,6 +511,18 @@ def scan_full_la_serena_grid() -> dict:
             base_score += 0.05
         
         score = min(1.0, base_score * water_presence * freezing_factor)
+
+        # -------------------------------------------------------------------------
+        # Physical Safety Safeguards (Reglas de Coherencia Física Inviolables)
+        # Previenen falsas alarmas de evacuación durante lluvias débiles/moderadas
+        # -------------------------------------------------------------------------
+        if precip_24h < 10.0 and direct_Q < 1.0 and geotech_fs >= 1.0:
+            # Lluvia débil sin escorrentía superficial -> Mantener estrictamente en VERDE (max 25%)
+            score = min(score, 0.25)
+        elif precip_24h < 25.0 and direct_Q < 5.0 and geotech_fs >= 1.0:
+            # Lluvia moderada sin escorrentía crítica -> Mantener máximo en AMARILLA (max 55%)
+            score = min(score, 0.55)
+
         score_pct = round(score * 100.0, 1)
 
         tc_hours = info["concentration_time_hours"]
