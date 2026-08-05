@@ -1,12 +1,12 @@
-\documentclass[12pt,a4paper]{article}
+\documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
-\usepackage[spanish,es-nodecimaldot]{babel}
-\usepackage[margin=2.5cm]{geometry}
-\usepackage{helvet}
-\renewcommand{\familydefault}{\sfdefault}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{tabularx}
-\usepackage{fancyhdr}
+\usepackage{caption}
 \usepackage{enumitem}
 \usepackage{hyperref}
 
@@ -14,110 +14,100 @@
     colorlinks=true,
     linkcolor=black,
     citecolor=black,
-    urlcolor=blue,
-    pdftitle={Informe Técnico de Evaluación - Proyecto Júpiter},
-    pdfauthor={Proyecto Júpiter}
+    urlcolor=black
 }
 
-% Formal Header & Footer Formatting
-\pagestyle{fancy}
-\fancyhf{}
-\rhead{\small \textbf{Proyecto Júpiter — Informe de Evaluación}}
-\lhead{\small La Serena, Chile}
-\rfoot{\small Página \thepage}
-\lfoot{\small Documento Técnico Institucional}
-
-\setlength{\headheight}{15pt}
-\setlist[itemize]{leftmargin=*}
-\setlist[enumerate]{leftmargin=*}
+\title{\textbf{Proyecto Júpiter: Sistema de Alerta Temprana e Inteligencia Hidrometeorológica}\\
+\large Informe Técnico de Evaluación Post-Prueba Real y Factibilidad Institucional}
+\author{\textbf{Moisés Amundarain}\\
+Investigador Principal --- Proyecto Júpiter}
+\date{Agosto de 2026}
 
 \begin{document}
+\spanishdeactivate{><}
 
-% Title Header
-\begin{center}
-    {\Large \textbf{INFORME TÉCNICO DE EVALUACIÓN Y FACTIBILIDAD INSTITUCIONAL}}\\[2mm]
-    {\large \textbf{Proyecto Júpiter: Sistema de Alerta Temprana e Inteligencia Hidrometeorológica}}\\[3mm]
-    \rule{\textwidth}{1pt}\\[2mm]
-    {\small \textbf{Área de Cobertura:} Comuna de La Serena / Valle del Elqui, Región de Coquimbo}\\[1mm]
-    {\small \textbf{Destinatarios:} Cuerpo de Bomberos de La Serena, Ilustre Municipalidad de La Serena y SENAPRED}\\[1mm]
-    {\small \textbf{Fecha de Emisión:} Agosto de 2026}
-    \rule{\textwidth}{0.5pt}
-\end{center}
+\maketitle
 
-\vspace{4mm}
+\begin{abstract}
+El presente documento expone la evaluación formal de la prueba operacional realizada por el \textbf{Proyecto Júpiter} durante el evento hidrometeorológico acontecido entre el 30 de julio y el 1 de agosto de 2026 en la comuna de La Serena. Se presenta un diagnóstico exhaustivo de las inconsistencias y puntos ciegos iniciales detectados en tiempo real, las refactorizaciones funcionales implementadas para su resolución, los beneficios directos que aporta la plataforma al Cuerpo de Bomberos y a la Municipalidad de La Serena, y las etapas propuestas de desarrollo y escalabilidad territorial para su eventual adopción institucional.
+\end{abstract}
 
-\section{Resumen Ejecutivo}
-El presente documento contiene la evaluación formal de la prueba operacional realizada por el **Proyecto Júpiter** durante el frente hidrometeorológico registrado entre el 30 de julio y el 1 de agosto de 2026 en la comuna de La Serena. El objetivo de este informe es presentar de manera sobria y transparente las capacidades demostradas por la plataforma, analizar los puntos críticos identificados y resueltos, describir los beneficios directos para los organismos de respuesta ante emergencias, y detallar los próximos pasos y ejemplos de aplicación territorial para su eventual adopción por parte del Cuerpo de Bomberos y la Municipalidad de La Serena.
+\section{Introducción y Contexto Operativo}
 
-\section{Contexto y Problemas Detectados en la Fase de Prueba}
-Durante eventos de precipitaciones en cuencas semiáridas como la del Valle del Elqui, los sistemas tradicionales de alerta sufren de dos limitaciones severas: la emisión de alertas comunales homogéneas que no diferencian zonas secas de zonas de riesgo, y la imposibilidad de anticipar crecidas de quebradas cuando la lluvia cae principalmente en la precordillera.
+La comuna de La Serena posee una compleja geografía hidro-meteorológica caracterizada por cuencas orográficas de rápida respuesta en precordillera y colectores pluviales urbanos en la franja costera. Ante eventos de precipitación intensa o desbordes repentinos, los sistemas de alerta tradicionales suelen presentar dos limitaciones severas: la emisión de alertas comunales homogéneas que no diferencian zonas secas de zonas de riesgo, y la imposibilidad de anticipar desbordes cuando la precipitación cae principalmente en la precordillera.
 
-Durante las primeras horas de evaluación en tiempo real, el sistema detectó y corrigió los siguientes aspectos operacionales:
+El \textbf{Proyecto Júpiter} fue diseñado para resolver esta vulnerabilidad mediante una plataforma predictiva que integra telemetría satelital y terrena, modelos de aprendizaje automático y un escáner de 35 micro-zonas geográficas calibradas en coordenadas WGS84.
 
-\begin{table}[h!]
+\section{Diagnóstico de la Fase de Prueba Real y Puntos Resueltos}
+
+Durante las primeras horas de evaluación en terreno, se identificaron y resolvieron de forma sistemática cinco limitaciones operacionales críticas, tal como se sintetiza en la Tabla~\ref{tab:diagnostico}.
+
+\begin{table}[htbp]
 \centering
 \small
+\caption{Diagnóstico de puntos críticos detectados y soluciones implementadas.}
+\label{tab:diagnostico}
 \begin{tabularx}{\textwidth}{@{} X X X @{}}
 \toprule
-\textbf{Aspecto Detectado} & \textbf{Efecto en Terreno} & \textbf{Solución Implementada} \\
+\textbf{Aspecto Detectado} & \textbf{Efecto Observado en Terreno} & \textbf{Solución Implementada} \\
 \midrule
-\textbf{1. Falsas Alarmas Urbanas} & Marcaba riesgo elevado en el centro histórico durante lloviznas débiles. & Se acotó la escala de alerta urbana exigiendo lluvia acumulada o agua acumulada real. \\
+\textbf{1. Falsas Alarmas Urbanas} & Salto abrupto de riesgo en el centro histórico durante lloviznas débiles. & Se acotó la escala de alerta exigiendo acumulación de lluvia o agua real. \\
 \addlinespace
-\textbf{2. Punto Ciego Fluvial en Quebradas} & Crecidas de cauce en Pueblo Islón sin alerta anticipada. & Se incorporó el caudal fluvial que baja desde aguas arriba en la precordillera. \\
+\textbf{2. Punto Ciego en Quebradas} & Crecidas de cauce en Pueblo Islón sin alerta anticipada en el modelo. & Se integró el caudal fluvial que baja desde la precordillera aguas arriba. \\
 \addlinespace
-\textbf{3. Caída de Estaciones de Terreno} & Interrupción del servidor de datos de terreno durante la tormenta. & Se integró un consenso de 5 fuentes meteorológicas independientes de respaldo. \\
+\textbf{3. Caída de Fuentes Terrenas} & Interrupción del servidor meteorológico local durante la tormenta. & Se incorporó un consenso de 5 proveedores meteorológicos independientes. \\
 \addlinespace
-\textbf{4. Desconexión con Noticias y Terreno} & Calles anegadas en Las Compañías no registradas por sensores fijos. & Se implementó un lector automático de noticias locales y reportes de emergencia. \\
+\textbf{4. Desconexión con Terreno} & Calles anegadas en Las Compañías no registradas por sensores fijos. & Se implementó un lector automático de noticias y reportes de emergencia. \\
 \addlinespace
-\textbf{5. Proyección de Picos Pasados} & Muestra de horas de impacto futuras cuando la lluvia ya había pasado. & Se incorporó el análisis del hidrograma completo para indicar cuando el pico ya transcurrió. \\
+\textbf{5. Proyección de Picos Pasados} & Muestra de picos futuros cuando la tormenta ya había transcurrido. & Se incorporó el análisis del hidrograma completo para indicar picos pasados. \\
 \bottomrule
 \end{tabularx}
-\caption{Resumen de puntos ajustados y soluciones aplicadas durante la fase de prueba.}
 \end{table}
 
 \section{Beneficios Principales para Bomberos y la Municipalidad}
-La implementación del Proyecto Júpiter entrega ventajas estratégicas concretas para la toma de decisiones en emergencias:
+
+La implementación del Proyecto Júpiter entrega ventajas estratégicas concretas para la gestión de emergencias y la toma de decisiones preventivas:
 
 \begin{enumerate}
-    \item \textbf{Zonificación Táctica por Micro-Sectores:} El sistema divide a La Serena en 35 zonas independientes. Esto permite despachar recursos de Bomberos o personal municipal únicamente a los sectores que presentan riesgo real (como Quebrada El Arrayán Costero o Las Compañías), evitando desplegar unidades en zonas urbanas estables.
+    \item \textbf{Zonificación Táctica por Micro-Sectores:} El sistema evalúa a La Serena dividida en 35 zonas independientes. Esto permite a Bomberos y a la Municipalidad despachar recursos únicamente hacia los sectores en riesgo real (como Quebrada El Arrayán o Las Compañías), optimizando el personal en áreas urbanas estables.
     
-    \item \textbf{Tiempos de Anticipación Diferenciados:} El modelo distingue los tiempos de respuesta hidrológica. Otorga alertas tempranas con 1.5 horas de anticipación en quebradas precordilleranas y de 3.5 a 4 horas en colectores urbanos bajos, permitiendo cierres viales y evacuaciones preventivas oportunas.
+    \item \textbf{Tiempos de Anticipación Diferenciados:} El modelo distingue las dinámicas hidrológicas de cada zona, otorgando alertas con $1.5\text{ horas}$ de anticipación en quebradas precordilleranas y de $3.5$ a $4.0\text{ horas}$ en colectores urbanos bajos, facilitando cierres viales y evacuaciones preventivas.
     
-    \item \textbf{Continuidad Operativa por Redundancia de Datos:} Al consultar 5 proveedores meteorológicos en paralelo (Open-Meteo, Ensamble ECMWF/GFS/ICON, wttr.in, OpenWeatherMap y MeteoBlue), el sistema continúa funcionando sin interrupciones aunque colapsen los servidores de una institución local.
+    \item \textbf{Resiliencia Multi-Fuente:} Al consultar cinco proveedores meteorológicos en paralelo (Open-Meteo, Ensamble ECMWF/GFS/ICON, wttr.in, OpenWeatherMap y MeteoBlue), la plataforma mantiene su continuidad operativa ante fallas o caídas de servidores institucionales locales.
     
-    \item \textbf{Validación Automática con Alertas Oficiales y Medios:} El lector automático procesa los comunicados de SENAPRED y medios locales, asegurando que las alertas SAE enviadas a teléfonos celulares se reflejen inmediatamente en el mapa del centro de mando.
+    \item \textbf{Sincronización con Alertas Oficiales y Reportes:} El lector automático procesa comunicados oficiales de SENAPRED y reportes de prensa regional, garantizando que las Alertas SAE emitidas a celulares se reflejen de inmediato en la consola de mando.
 \end{enumerate}
 
 \section{Próximos Pasos de Desarrollo}
-Con el objetivo de consolidar el sistema para su uso institucional, se proponen las siguientes etapas de trabajo:
 
-\begin{itemize}
-    \item \textbf{Integración con la Central de Despacho de Bomberos:} Exportar las capas geográficas del sistema a formatos estándares (GeoJSON y KML) para su visualización directa en las pantallas de la Central de Alarmas del Cuerpo de Bomberos de La Serena.
-    
-    \item \textbf{Instalación de Sensores IoT en Pasarelas y Colectores:} Emplazar sensores de nivel ultrasónicos de bajo costo en puntos estratégicos del Río Elqui (Islón, Altovalsol, Las Rojas) y pasos bajo nivel de Ruta 5 para medir el nivel de agua en tiempo real.
-    
-    \item \textbf{Convenio de Datos con Instituciones Técnicas:} Formalizar acuerdos de intercambio de datos con el Centro Científico CEAZA y la Dirección General de Aguas (DGA) para acceder a enlaces directos de alta disponibilidad.
-    
-    \item \textbf{Conexión con el Sistema Municipal de Emergencias (COGRID):} Desarrollar un bot de notificaciones automáticas para enviar reportes sintéticos de estado directamente a las autoridades municipales y comités de emergencia.
-\end{itemize}
+Para avanzar hacia la consolidación e integración institucional de la plataforma, se proponen las siguientes fases de trabajo:
 
-\section{Próximos Ejemplos de Aplicación y Escalabilidad}
-La arquitectura modular del Proyecto Júpiter permite extender su uso a otros territorios de la región y del país con adaptaciones mínimas:
+\begin{enumerate}
+    \item \textbf{Integración con la Central de Despacho de Bomberos:} Exportar las capas geográficas del sistema en formatos GeoJSON y KML para su despliegue directo en las pantallas del Centro de Despacho de Alarmas del Cuerpo de Bomberos de La Serena.
+    
+    \item \textbf{Instalación de Sensores IoT en Pasarelas y Colectores:} Emplazar sensores de nivel ultrasónicos de bajo costo en las pasarelas del Río Elqui (Islón, Altovalsol, Las Rojas) y pasos bajo nivel de Ruta 5 para telemetría directa de cauce.
+    
+    \item \textbf{Convenios de Datos con Organismos Técnicos:} Formalizar acuerdos de intercambio de información con el Centro Científico CEAZA y la Dirección General de Aguas (DGA) para contar con enlaces de alta disponibilidad.
+    
+    \item \textbf{Conexión con el Sistema Municipal de Emergencias (COGRID):} Implementar un servicio automatizado de notificaciones ejecutivas vía mensajería instantánea hacia la Dirección de Gestión de Riesgos de Desastres municipal.
+\end{enumerate}
 
-\begin{itemize}
-    \item \textbf{Extensión a la Comuna de Coquimbo:} Configurar la grilla de micro-sectores para zonas vulnerables como la Parte Alta, Baquedano, Rincón de la Victoria y el eje del Estero Culebrón.
+\section{Próximos Ejemplos de Aplicación y Escalabilidad Territorial}
+
+Debido a su estructura modular, el Proyecto Júpiter posee una alta capacidad de adaptación para ser replicado en otros territorios de la región y del país:
+
+\begin{enumerate}
+    \item \textbf{Extensión a la Comuna de Coquimbo:} Configuración de la red de micro-sectores en áreas vulnerables como la Parte Alta, Baquedano, Rincón de la Victoria y el cauce del Estero Culebrón.
     
-    \item \textbf{Monitoreo de Cuenca Alta en el Valle del Elqui (Vicuña y Paihuano):} Aplicar el modelo en comunas precordilleranas para detectar aluviones y bajadas de quebradas que puedan interrumpir la Ruta CH-41 o amenazar asentamientos rurales.
+    \item \textbf{Monitoreo de Cuenca Alta en el Valle del Elqui (Vicuña y Paihuano):} Aplicación del modelo en zonas precordilleranas para la detección oportuna de aluviones que puedan interrumpir la Ruta CH-41 o amenazar poblados rurales.
     
-    \item \textbf{Aplicación en Cuencas de la Región de Atacama:} Replicar el sistema en ríos de respuesta extrema ante eventos copiosos de núcleo frío en cuencas semiáridas como el Río Copiapó y el Río Huasco.
-\end{itemize}
+    \item \textbf{Aplicación en Cuencas de la Región de Atacama:} Réplica de la plataforma en cuencas de respuesta extrema ante eventos de núcleo frío, como el Río Copiapó y el Río Huasco.
+\end{enumerate}
 
 \section{Conclusión}
-La evaluación de la prueba en terreno demostró que el Proyecto Júpiter es una plataforma funcional, capaz de auto-corregirse y adaptarse a contingencias en tiempo real. Sus resultados aportan valor directo a la labor preventiva de Bomberos y de los equipos de gestión de riesgos municipales, constituyendo una base sólida para avanzar hacia una implementación formal en la comuna de La Serena.
 
-\vspace{6mm}
+La evaluación de la prueba en terreno ratifica que el Proyecto Júpiter se ha consolidado como una plataforma predictiva robusta, capaz de auto-corregirse ante contingencias y entregar información de alto valor operativo. La plataforma constituye un insumo técnico maduro para ser presentado e integrado en los protocolos de respuesta del Cuerpo de Bomberos y de la Municipalidad de La Serena.
 
-% Standard Formal Bibliography
 \begin{thebibliography}{9}
 
 \bibitem{senapred2024}
