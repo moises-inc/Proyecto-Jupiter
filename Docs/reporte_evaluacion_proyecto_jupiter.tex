@@ -1,186 +1,150 @@
-\documentclass[11pt,a4paper]{article}
+\documentclass[12pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[spanish,es-nodecimaldot]{babel}
-\usepackage[margin=2.2cm]{geometry}
+\usepackage[margin=2.5cm]{geometry}
 \usepackage{helvet}
 \renewcommand{\familydefault}{\sfdefault}
-\usepackage{amsmath,amssymb}
-\usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{xcolor}
-\usepackage{hyperref}
+\usepackage{tabularx}
 \usepackage{fancyhdr}
 \usepackage{enumitem}
-\usepackage{tcolorbox}
-\usepackage{colortbl}
-
-% Color Definitions
-\definecolor{navyblue}{RGB}{20, 45, 85}
-\definecolor{alertred}{RGB}{215, 38, 56}
-\definecolor{alertwarning}{RGB}{245, 158, 11}
-\definecolor{alertgreen}{RGB}{16, 185, 129}
-\definecolor{lightbg}{RGB}{245, 247, 250}
-\definecolor{accentblue}{RGB}{41, 128, 185}
+\usepackage{hyperref}
 
 \hypersetup{
     colorlinks=true,
-    linkcolor=navyblue,
-    urlcolor=accentblue,
-    pdftitle={Reporte de Evaluación Técnica - Proyecto Júpiter},
-    pdfauthor={Proyecto Júpiter - Inteligencia Hidrometeorológica}
+    linkcolor=black,
+    citecolor=black,
+    urlcolor=blue,
+    pdftitle={Informe Técnico de Evaluación - Proyecto Júpiter},
+    pdfauthor={Proyecto Júpiter}
 }
 
-% Header & Footer
-\setlength{\headheight}{14.5pt}
+% Formal Header & Footer Formatting
 \pagestyle{fancy}
 \fancyhf{}
-\rhead{\textcolor{navyblue}{\textbf{Proyecto Júpiter — Informe Técnico de Evaluación}}}
-\lhead{\textcolor{gray}{La Serena / Región de Coquimbo}}
-\rfoot{\thepage}
-\lfoot{\textcolor{gray}{Documento de Evaluación para Bomberos y Municipalidad}}
+\rhead{\small \textbf{Proyecto Júpiter — Informe de Evaluación}}
+\lhead{\small La Serena, Chile}
+\rfoot{\small Página \thepage}
+\lfoot{\small Documento Técnico Institucional}
+
+\setlength{\headheight}{15pt}
+\setlist[itemize]{leftmargin=*}
+\setlist[enumerate]{leftmargin=*}
 
 \begin{document}
 
-% Title Block
-\begin{tcolorbox}[colback=navyblue,colframe=navyblue,arc=4mm,boxrule=0pt,top=6mm,bottom=6mm]
-\centering
-\color{white}
-{\Huge \textbf{PROYECTO JÚPITER}}\\[2mm]
-{\Large \textbf{Sistema de Alerta Temprana e Inteligencia Hidrometeorológica}}\\[3mm]
-{\small \textbf{Informe de Evaluación Técnica Post-Prueba Real, Lecciones Aprendidas y Escalabilidad}}\\[1mm]
-{\footnotesize Dirigido a: Equipo de Desarrollo, Cuerpo de Bomberos de La Serena e Ilustre Municipalidad de La Serena}
-\end{tcolorbox}
+% Title Header
+\begin{center}
+    {\Large \textbf{INFORME TÉCNICO DE EVALUACIÓN Y FACTIBILIDAD INSTITUCIONAL}}\\[2mm]
+    {\large \textbf{Proyecto Júpiter: Sistema de Alerta Temprana e Inteligencia Hidrometeorológica}}\\[3mm]
+    \rule{\textwidth}{1pt}\\[2mm]
+    {\small \textbf{Área de Cobertura:} Comuna de La Serena / Valle del Elqui, Región de Coquimbo}\\[1mm]
+    {\small \textbf{Destinatarios:} Cuerpo de Bomberos de La Serena, Ilustre Municipalidad de La Serena y SENAPRED}\\[1mm]
+    {\small \textbf{Fecha de Emisión:} Agosto de 2026}
+    \rule{\textwidth}{0.5pt}
+\end{center}
 
 \vspace{4mm}
 
-\begin{tcolorbox}[colback=lightbg,colframe=accentblue,arc=2mm,title=\textbf{Resumen Ejecutivo}]
-El presente documento constituye la evaluación exhaustiva de la \textbf{Fase de Prueba Real en Terreno} del Proyecto Júpiter (realizada entre el 30 de Julio y el 01 de Agosto de 2026 en La Serena). Se analizan los puntos ciegos iniciales detectados durante el evento, las refactorizaciones matemáticas y tecnológicas implementadas en tiempo real, los resultados de precisión alcanzados y la propuesta de escalabilidad institucional para su presentación ante el Cuerpo de Bomberos y la Municipalidad de La Serena.
-\end{tcolorbox}
+\section{Resumen Ejecutivo}
+El presente documento contiene la evaluación formal de la prueba operacional realizada por el **Proyecto Júpiter** durante el frente hidrometeorológico registrado entre el 30 de julio y el 1 de agosto de 2026 en la comuna de La Serena. El objetivo de este informe es presentar de manera sobria y transparente las capacidades demostradas por la plataforma, analizar los puntos críticos identificados y resueltos, describir los beneficios directos para los organismos de respuesta ante emergencias, y detallar los próximos pasos y ejemplos de aplicación territorial para su eventual adopción por parte del Cuerpo de Bomberos y la Municipalidad de La Serena.
 
-\section{Introducción y Contexto Operativo}
-La comuna de La Serena presenta una compleja geografía hidro-meteorológica caracterizada por cuencas orográficas de rápida respuesta en precordillera ($T_c \approx 1.5\text{h}$) y colectores bajos urbanos costeros ($T_c \approx 4.0\text{h}$). Ante eventos de precipitación convectiva o precipitaciones orográficas en ladera, los sistemas de alerta comunales tradicionales suelen generar dos problemas críticos:
-\begin{enumerate}[leftmargin=*]
-    \item \textbf{Falsas Alarmas Comunales:} Declarar Alerta Roja para toda la ciudad cuando la lluvia intensa solo afecta a quebradas precordilleranas.
-    \item \textbf{Puntos Ciegos de Escorrentía:} Omitir la detección de bajadas de agua e inundaciones en sectores como Pueblo Islón o Las Compañías cuando la estación meteorológica costera registra llovizna débil.
-\end{enumerate}
+\section{Contexto y Problemas Detectados en la Fase de Prueba}
+Durante eventos de precipitaciones en cuencas semiáridas como la del Valle del Elqui, los sistemas tradicionales de alerta sufren de dos limitaciones severas: la emisión de alertas comunales homogéneas que no diferencian zonas secas de zonas de riesgo, y la imposibilidad de anticipar crecidas de quebradas cuando la lluvia cae principalmente en la precordillera.
 
-El \textbf{Proyecto Júpiter} se diseñó para resolver esta problemática mediante Inteligencia Artificial, Asimilación de Datos EnKF, Dispersión Espacial IDW e Ingesta NLP de Noticias.
-
-\section{Análisis de Puntos Ciegos Iniciales y Fallas Detectadas}
-Durante las primeras horas de la fase de prueba real, se identificaron seis limitaciones críticas que fueron corregidas sistemáticamente:
+Durante las primeras horas de evaluación en tiempo real, el sistema detectó y corrigió los siguientes aspectos operacionales:
 
 \begin{table}[h!]
 \centering
 \small
-\begin{tabular}{p{3.5cm} p{5.5cm} p{6.5cm}}
+\begin{tabularx}{\textwidth}{@{} X X X @{}}
 \toprule
-\textbf{Punto Crítico Detectado} & \textbf{Síntoma Observado en Terreno} & \textbf{Causa Raíz Identificada} \\
+\textbf{Aspecto Detectado} & \textbf{Efecto en Terreno} & \textbf{Solución Implementada} \\
 \midrule
-\rowcolor{lightbg}
-\textbf{1. Falsa Alerta Roja por EnKF No Acotado} & Salto abrupto de 8.7\% a 88.1\% en el Centro Histórico con solo 2.5 mm de lluvia. & La variable de innovación $EnKF$ se sumaba sin normalizar a una escala $[0,1]$. \\
-\textbf{2. Punto Ciego Fluvial en Pueblo Islón} & Crecida de río y desborde registrado sin anticipación en el modelo (mostraba 25\%). & La escorrentía solo medía lluvia local ($direct\_Q$), ignorando el caudal fluvial de aguas arriba. \\
-\rowcolor{lightbg}
-\textbf{3. Vulnerabilidad ante Caída de CEAZAMET} & El servidor de estaciones CEAZAMET quedó fuera de línea durante el pico de la tormenta. & Dependencia de una sola fuente primaria de terreno sin factor de incertidumbre adaptativo. \\
-\textbf{4. Lluvia Plana Comunal} & Imposibilidad de diferenciar la lluvia orográfica de la ladera con la llovizna costera. & Asignación de un único escalar de precipitación comunal a los 35 micro-sectores. \\
-\rowcolor{lightbg}
-\textbf{5. Desconexión con Anegamiento Urbano} & Calles anegadas en Las Compañías y Ruta 5 mientras sensores marcaban baja lluvia. & Falta de ingesta de reportes ciudadanos y noticias de emergencias en tiempo real. \\
-\textbf{6. Falsa Proyección de Picos Pasados} & Proyección de picos de lluvia futuros cuando el pico de la tormenta ya había transcurrido. & El algoritmo solo escaneaba datos futuros ($t \ge t_{actual}$), ignorando el hidrograma pasado. \\
+\textbf{1. Falsas Alarmas Urbanas} & Marcaba riesgo elevado en el centro histórico durante lloviznas débiles. & Se acotó la escala de alerta urbana exigiendo lluvia acumulada o agua acumulada real. \\
+\addlinespace
+\textbf{2. Punto Ciego Fluvial en Quebradas} & Crecidas de cauce en Pueblo Islón sin alerta anticipada. & Se incorporó el caudal fluvial que baja desde aguas arriba en la precordillera. \\
+\addlinespace
+\textbf{3. Caída de Estaciones de Terreno} & Interrupción del servidor de datos de terreno durante la tormenta. & Se integró un consenso de 5 fuentes meteorológicas independientes de respaldo. \\
+\addlinespace
+\textbf{4. Desconexión con Noticias y Terreno} & Calles anegadas en Las Compañías no registradas por sensores fijos. & Se implementó un lector automático de noticias locales y reportes de emergencia. \\
+\addlinespace
+\textbf{5. Proyección de Picos Pasados} & Muestra de horas de impacto futuras cuando la lluvia ya había pasado. & Se incorporó el análisis del hidrograma completo para indicar cuando el pico ya transcurrió. \\
 \bottomrule
-\end{tabular}
-\caption{Matriz de Fallas Iniciales y Diagnóstico Técnico durante la Prueba Real.}
+\end{tabularx}
+\caption{Resumen de puntos ajustados y soluciones aplicadas durante la fase de prueba.}
 \end{table}
 
-\section{Refactorizaciones Matemáticas e Innovaciones Implementadas}
-Para resolver definitivamente las fallas detectadas, se implementó una arquitectura de 6 capas de protección:
+\section{Beneficios Principales para Bomberos y la Municipalidad}
+La implementación del Proyecto Júpiter entrega ventajas estratégicas concretas para la toma de decisiones en emergencias:
 
-\subsection{1. Ponderación Convexa y Suavizado Adaptativo EMA}
-Se estructuró una formulación convexa donde la suma de pesos es estrictamente igual a 1.00 ($\sum w_i = 1.00$):
-\begin{align}
-R_{raw} &= 0.22 \cdot \phi_{precip} + 0.18 \cdot \phi_{API} + 0.15 \cdot \phi_{ML} + 0.15 \cdot \phi_{runoff} + 0.10 \cdot \phi_{forecast} \nonumber \\
-        &\quad + 0.05 \cdot \phi_{geo} + 0.05 \cdot \phi_{rout} + 0.05 \cdot \phi_{EnKF} + 0.05 \cdot \phi_{news}
-\end{align}
-Para evitar oscilaciones o \textit{flickering}, se integró una Media Móvil Exponencial Asimétrica (EMA) con histeresis del 8\%:
-\begin{equation}
-S_{t} = \alpha \cdot S_{inst} + (1 - \alpha) \cdot S_{t-1}, \quad \text{donde } \alpha = \begin{cases} 0.45 & \text{si } S_{inst} \ge S_{t-1} \text{ (Adaptación rápida a subidas)} \\ 0.10 & \text{si } S_{inst} < S_{t-1} \text{ (Decaimiento paulatino en drenaje)} \end{cases}
-\end{equation}
-
-\subsection{2. Dispersión Espacial IDW (Haversine Inverse Distance Weighting)}
-Se calibró un motor de interpolación espacial por micro-sectores que calcula la precipitación $P_{sector}$ de cada una de las 35 zonas según las coordenadas WGS84 de las estaciones CEAZAMET y la grilla satelital:
-\begin{equation}
-P_{sector}(lat_i, lon_i) = \frac{\sum_{j=1}^{K} w_j \cdot P_j}{\sum_{j=1}^{K} w_j}, \quad w_j = \frac{1}{d(lat_i, lon_i, lat_j, lon_j)^2}
-\end{equation}
-
-\subsection{3. Ingesta Redundante de 5 Proveedores Meteorológicos}
-Se desarrolló un módulo ingesdor redundante que consulta en paralelo:
-\begin{itemize}[leftmargin=*]
-    \item Open-Meteo Current Telemetry API.
-    \item Open-Meteo Multi-Model Ensemble (ECMWF IFS, GFS Seamless, ICON Seamless).
-    \item wttr.in International Weather Service.
-    \item OpenWeatherMap GFS Telemetry.
-    \item MeteoBlue / Tomorrow.io Contingency Fallback.
-\end{itemize}
-Si una fuente cae, el sistema aplica un factor de incremento por incertidumbre ($Uncertainty\_Boost = +15\%$).
-
-\subsection{4. Ingestor NLP de Noticias de Terreno y Alertas SAE}
-Se creó el módulo \texttt{ingest\_news\_reports.py} que procesa titulares de medios regionales (El Día, Diario La Serena, BioBioChile) y alertas oficiales de SENAPRED. Si se detectan palabras clave de anegamiento en Las Compañías o Ruta 5, el modelo eleva el score base a mínimo 70.0\% (\textbf{Alerta Roja Focalizada}).
-
-\subsection{5. Motor de Detección de Picos Transcurridos e Hidrograma}
-El sistema analiza el hidrograma en una ventana de 24 horas ($t_{-12h}$ a $t_{+12h}$). Si el tiempo del pico máximo ($t_{pico} + T_c$) es menor a la hora actual, el modelo clasifica automáticamente el estado como \textbf{"punto máximo transcurrido"} y despliega la cuenta regresiva para el \textbf{Paso Seguro por Drenaje Expirado}.
-
-\section{Resultados Alcanzados en Tiempo Real}
-Durante la prueba real, el modelo demostró una alta precisión táctica y coherencia física:
-
-\begin{table}[h!]
-\centering
-\small
-\begin{tabular}{l c c c p{4.5cm}}
-\toprule
-\textbf{Micro-Sector} & \textbf{Semáforo} & \textbf{Riesgo ML (\%)} & \textbf{Caudal ($Q$)} & \textbf{Diagnóstico Temporal / Terreno} \\
-\midrule
-\rowcolor{lightbg}
-Quebrada El Arrayán Costero & \textbf{\textcolor{alertred}{ALERTA ROJA}} & \textbf{70.3\%} & 4.21 mm & punto máximo transcurrido (10:30 hrs - Calma) \\
-Las Rojas \& Entrada Precordillera & \textbf{\textcolor{alertwarning}{ALERTA AMARILLA}} & \textbf{55.0\%} & 2.42 mm & punto máximo transcurrido (10:30 hrs - Drenaje) \\
-\rowcolor{lightbg}
-Santa Gracia Alta / Pelícano & \textbf{\textcolor{alertwarning}{ALERTA AMARILLA}} & \textbf{52.9\%} & 2.17 mm & punto máximo transcurrido (10:00 hrs - Calma) \\
-Las Compañías Alta \& Villa Lambert & \textbf{\textcolor{alertwarning}{ALERTA AMARILLA}} & \textbf{35.2\%} & 1.27 mm & Anegamiento de calles reportado (NLP Activo) \\
-\rowcolor{lightbg}
-Centro Histórico / Damero & \textbf{\textcolor{alertgreen}{VERDE ESTABLE}} & \textbf{13.5\%} & 0.20 mm & Transitabilidad Normal (Llovizna 1.2 mm) \\
-Avenida del Mar / Costero & \textbf{\textcolor{alertgreen}{VERDE ESTABLE}} & \textbf{13.0\%} & 0.18 mm & Borde costero sin anegamiento pluvial \\
-\bottomrule
-\end{tabular}
-\caption{Resultados Obtenidos por el Modelo ML en la Fase de Inferencia en Tiempo Real.}
-\end{table}
-
-\section{Beneficios, Puntos a Mejorar y Escalabilidad Institucional}
-
-\subsection{Beneficios para Bomberos y Municipalidad}
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Zonificación Táctica de Emergencias:} Permite desplegar carros de Bomberos y cuadrillas municipales hacia las zonas con riesgo real (ej: Quebrada El Arrayán o Las Compañías) sin distraer recursos en sectores urbanos estables.
-    \item \textbf{Anticipación por Tiempo de Concentración ($T_c$):} Otorga ventanas de prevención diferenciadas de 1.5h en precordillera y de 3.5h a 4h para colectores bajos de la ciudad.
-    \item \textbf{Sincronización con SENAPRED y Medios:} Valida de forma automática las Alertas SAE y los reportes ciudadanos en redes y periódicos locales.
-\end{itemize}
-
-\subsection{Puntos de Mejora Técnicos}
-\begin{enumerate}[leftmargin=*]
-    \item \textbf{Sensores de Nivel IoT en Cauces:} Instalar sensores ultrasónicos de bajo costo en las pasarelas del Río Elqui (Islón, Altovalsol, Las Rojas) para telemetría directa de altura de cauce.
-    \item \textbf{Refinamiento de Grilla Pluvial Urbana:} Aumentar la resolución a grillas de 100 metros en pasos bajo nivel de Ruta 5 (Km 490 a 500) y arterias principales (Av. Balmaceda, Cuatro Esquinas).
-    \item \textbf{API Key Dedicada CEAZAMET:} Formalizar un convenio de acceso web-service directo con el instituto de investigación CEAZA para evitar caídas de scraping durante tormentas.
+\begin{enumerate}
+    \item \textbf{Zonificación Táctica por Micro-Sectores:} El sistema divide a La Serena en 35 zonas independientes. Esto permite despachar recursos de Bomberos o personal municipal únicamente a los sectores que presentan riesgo real (como Quebrada El Arrayán Costero o Las Compañías), evitando desplegar unidades en zonas urbanas estables.
+    
+    \item \textbf{Tiempos de Anticipación Diferenciados:} El modelo distingue los tiempos de respuesta hidrológica. Otorga alertas tempranas con 1.5 horas de anticipación en quebradas precordilleranas y de 3.5 a 4 horas en colectores urbanos bajos, permitiendo cierres viales y evacuaciones preventivas oportunas.
+    
+    \item \textbf{Continuidad Operativa por Redundancia de Datos:} Al consultar 5 proveedores meteorológicos en paralelo (Open-Meteo, Ensamble ECMWF/GFS/ICON, wttr.in, OpenWeatherMap y MeteoBlue), el sistema continúa funcionando sin interrupciones aunque colapsen los servidores de una institución local.
+    
+    \item \textbf{Validación Automática con Alertas Oficiales y Medios:} El lector automático procesa los comunicados de SENAPRED y medios locales, asegurando que las alertas SAE enviadas a teléfonos celulares se reflejen inmediatamente en el mapa del centro de mando.
 \end{enumerate}
 
-\subsection{Escalabilidad Institucional}
-El Proyecto Júpiter está construido bajo una arquitectura modular en contenedor Docker/Python accesible vía API REST JSON (\texttt{http://localhost:8000/api/scan}):
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Integración a la Central de Alarmas de Bomberos:} Exportación de capas GIS en formato GeoJSON/KML para ser visualizados directamente en las pantallas del Centro de Despacho de Bomberos de La Serena.
-    \item \textbf{Integración a la COGRID Municipal:} Envío automático de resúmenes ejecutivos vía WhatsApp/Telegram a la Dirección de Gestión de Riesgos de Desastres de la Municipalidad.
-    \item \textbf{Expansión Regional:} El modelo puede replicarse en menos de 48 horas para las comunas vecinas de Coquimbo, Vicuña, Paihuano y Andacollo.
+\section{Próximos Pasos de Desarrollo}
+Con el objetivo de consolidar el sistema para su uso institucional, se proponen las siguientes etapas de trabajo:
+
+\begin{itemize}
+    \item \textbf{Integración con la Central de Despacho de Bomberos:} Exportar las capas geográficas del sistema a formatos estándares (GeoJSON y KML) para su visualización directa en las pantallas de la Central de Alarmas del Cuerpo de Bomberos de La Serena.
+    
+    \item \textbf{Instalación de Sensores IoT en Pasarelas y Colectores:} Emplazar sensores de nivel ultrasónicos de bajo costo en puntos estratégicos del Río Elqui (Islón, Altovalsol, Las Rojas) y pasos bajo nivel de Ruta 5 para medir el nivel de agua en tiempo real.
+    
+    \item \textbf{Convenio de Datos con Instituciones Técnicas:} Formalizar acuerdos de intercambio de datos con el Centro Científico CEAZA y la Dirección General de Aguas (DGA) para acceder a enlaces directos de alta disponibilidad.
+    
+    \item \textbf{Conexión con el Sistema Municipal de Emergencias (COGRID):} Desarrollar un bot de notificaciones automáticas para enviar reportes sintéticos de estado directamente a las autoridades municipales y comités de emergencia.
+\end{itemize}
+
+\section{Próximos Ejemplos de Aplicación y Escalabilidad}
+La arquitectura modular del Proyecto Júpiter permite extender su uso a otros territorios de la región y del país con adaptaciones mínimas:
+
+\begin{itemize}
+    \item \textbf{Extensión a la Comuna de Coquimbo:} Configurar la grilla de micro-sectores para zonas vulnerables como la Parte Alta, Baquedano, Rincón de la Victoria y el eje del Estero Culebrón.
+    
+    \item \textbf{Monitoreo de Cuenca Alta en el Valle del Elqui (Vicuña y Paihuano):} Aplicar el modelo en comunas precordilleranas para detectar aluviones y bajadas de quebradas que puedan interrumpir la Ruta CH-41 o amenazar asentamientos rurales.
+    
+    \item \textbf{Aplicación en Cuencas de la Región de Atacama:} Replicar el sistema en ríos de respuesta extrema ante eventos copiosos de núcleo frío en cuencas semiáridas como el Río Copiapó y el Río Huasco.
 \end{itemize}
 
 \section{Conclusión}
-La Fase de Prueba Real demostró que el Proyecto Júpiter pasó de ser un modelo teórico a una herramienta de inteligencia operativa robusta, capaz de auto-corregirse ante contingencias y entregar información de altísima utilidad táctica para salvar vidas y proteger a la comunidad de La Serena.
+La evaluación de la prueba en terreno demostró que el Proyecto Júpiter es una plataforma funcional, capaz de auto-corregirse y adaptarse a contingencias en tiempo real. Sus resultados aportan valor directo a la labor preventiva de Bomberos y de los equipos de gestión de riesgos municipales, constituyendo una base sólida para avanzar hacia una implementación formal en la comuna de La Serena.
 
-\vspace{8mm}
-\centering
-\textbf{Proyecto Júpiter — Inteligencia Hidrometeorológica para La Serena}\\
-\small Región de Coquimbo, Chile — 2026
+\vspace{6mm}
+
+% Standard Formal Bibliography
+\begin{thebibliography}{9}
+
+\bibitem{senapred2024}
+Servicio Nacional de Prevención y Respuesta ante Desastres (SENAPRED).
+\textit{Manual de Procedimientos del Sistema Nacional de Prevención y Respuesta ante Desastres}.
+Ministerio del Interior y Seguridad Pública, Gobierno de Chile, 2024.
+
+\bibitem{dmc2025}
+Dirección Meteorológica de Chile (DMC).
+\textit{Análisis de Eventos Meteorológicos Extremos en la Región de Coquimbo}.
+Dirección General de Aeronáutica Civil, Santiago, Chile, 2025.
+
+\bibitem{chow1988}
+Chow, V. T., Maidment, D. R., \& Mays, L. W.
+\textit{Applied Hydrology}.
+McGraw-Hill Book Company, Nueva York, 1988.
+
+\bibitem{scs1986}
+Soil Conservation Service (SCS).
+\textit{Urban Hydrology for Small Watersheds}.
+Technical Release 55 (TR-55), United States Department of Agriculture, Washington D.C., 1986.
+
+\bibitem{evensen2009}
+Evensen, G.
+\textit{Data Assimilation: The Ensemble Kalman Filter}.
+Springer-Verlag, Berlín, 2.ª edición, 2009.
+
+\end{thebibliography}
 
 \end{document}
