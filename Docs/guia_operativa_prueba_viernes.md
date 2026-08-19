@@ -8,6 +8,7 @@ status: listo
 tags: [jupiter, prueba-en-vivo, lluvias-viernes, la-serena, puesto-de-mando, bomberos]
 ---
 
+
 # 🌧️ Guía de Operación: Prueba en Vivo durante el Evento de Lluvias de este Viernes
 
 Este documento establece la **Guía Operativa de Terreno** para poner a prueba el primer prototipo funcional del **Proyecto Júpiter** durante el frente de precipitaciones pronosticado para este **Viernes en La Serena y la Región de Coquimbo**.
@@ -65,3 +66,6 @@ Si durante la lluvia de este viernes el Comandante de Incidentes o la municipali
 
 
 [[10_Projects/Proyecto_Centinela/README.md]]
+
+---
+🔗 [[Home]]

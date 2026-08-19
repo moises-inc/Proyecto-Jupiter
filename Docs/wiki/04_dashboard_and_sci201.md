@@ -11,3 +11,6 @@ El sistema integra un generador automatizado de bitácoras SCI-201 (Incident Bri
 
 
 [[10_Projects/Proyecto_Centinela/README.md]]
+
+---
+🔗 [[Home]]

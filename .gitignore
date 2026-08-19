@@ -13,6 +13,13 @@ __pycache__/
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+*.nav
+*.snm
+
+# Temporary Dissemination Reports (Never track generated PDF flyers)
+Reporte *.pdf
+*_tmp.pdf
+*_temp.pdf
 
 # Operating System & IDE
 .DS_Store

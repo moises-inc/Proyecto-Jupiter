@@ -151,3 +151,6 @@ Esta nota documenta de manera sistemática y continua todos los hallazgos técni
 - **Estado:** Finalizada exitosamente la Primera Prueba de Campo e Inferencia Hidrometeorológica para Proyecto Júpiter.
 - **Servidor:** Activo en background (`http://localhost:8000/`) sirviendo el Dashboard Táctico NRT.
 - **Repositorio:** 100% de los cambios commiteados y pusheados a GitHub (`main`).
+
+---
+🔗 [[Home]]

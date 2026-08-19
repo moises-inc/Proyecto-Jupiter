@@ -20,3 +20,6 @@ El Proyecto Júpiter está diseñado como un sistema modular de alerta temprana 
 
 
 [[10_Projects/Proyecto_Centinela/README.md]]
+
+---
+🔗 [[Home]]

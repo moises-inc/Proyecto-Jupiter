@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "Si utilizas Proyecto Júpiter en tu investigación, por favor cítalo como se indica a continuación."
+title: "Proyecto Júpiter: Sistema de Alerta Temprana e Inteligencia Hidrometeorológica para La Serena, Chile"
+abstract: >-
+  Sistema de código abierto de alerta temprana e inteligencia hidrometeorológica en tiempo real que
+  integra telemetría satelital, ciencia hidrológica (SCS-CN, IDW, Muskingum-Cunge) y Machine Learning
+  (Random Forest, PINNs, EnKF) para anticipar inundaciones y aluviones en 35 micro-sectores WGS84 de
+  La Serena, Chile, con Dashboard Táctico de Puesto de Mando vía FastAPI.
+type: software
+authors:
+  - family-names: Amundarain
+    given-names: Moisés
+    orcid: ""
+    affiliation: "Proyecto Centinela"
+    email: ""
+date-released: 2026-08-19
+version: 1.0.0
+license: Apache-2.0
+keywords:
+  - alerta temprana
+  - hidrometeorología
+  - machine learning
+  - sensores remotos
+  - La Serena
+  - inundaciones
+  - Chile
+repository-code: ""
+url: ""
+preferred-citation:
+  type: conference-paper
+  authors:
+    - family-names: Amundarain
+      given-names: Moisés
+  year: 2026
+  title: "Proyecto Júpiter: Sistema de Alerta Temprana e Inteligencia Hidrometeorológica para La Serena, Chile"
+  note: "Repositorio de código abierto bajo Apache License 2.0. Version 1.0.0."

@@ -101,3 +101,6 @@ El dashboard se organiza en **4 bloques visuales principales**:
 
 
 [[10_Projects/Proyecto_Centinela/README.md]]
+
+---
+🔗 [[Home]]

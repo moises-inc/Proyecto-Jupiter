@@ -20,3 +20,6 @@ El sistema calcula los tiempos de anticipación de los pronósticos (+1h, +3h, +
 
 
 [[10_Projects/Proyecto_Centinela/README.md]]
+
+---
+🔗 [[Home]]

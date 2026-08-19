@@ -11,3 +11,6 @@ El sistema modela la fase de recuperación y limpieza, prediciendo cuándo un á
 
 
 [[10_Projects/Proyecto_Centinela/README.md]]
+
+---
+🔗 [[Home]]

@@ -23,3 +23,6 @@ Runs without errors; returns `ceazamet_available: False` gracefully when CEAZAME
 
 ## Orchestration
 requires_orchestration: true
+
+---
+🔗 [[Home]]

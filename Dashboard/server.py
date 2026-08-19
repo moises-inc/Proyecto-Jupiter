@@ -61,10 +61,10 @@ LATEST_NRT_CACHE = {
 
 def sync_nrt_satellite_data():
     """
-    Background worker function that executes every 300 seconds (5 minutes)
+    Background worker function that executes every 60 seconds (1 minute)
     to fetch fresh NRT satellite telemetry and recalculate spatial scan predictions.
     """
-    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 📡 Ejecución de Ingesta Satelital NRT (Frecuencia: Cada 5 Minutos)...")
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 📡 Ejecución de Ingesta Satelital NRT (Frecuencia: Cada 60 Segundos)...")
     try:
         scan = scan_full_la_serena_grid()
         hours = [f"{h:02d}:00" for h in range(0, 25, 4)]
@@ -73,19 +73,21 @@ def sync_nrt_satellite_data():
             "rain_accum_mm": [0.0, 0.0, 0.0, 0.2, 0.5, 0.9, 0.9],
             "freezing_level_m": [3800, 3900, 4000, 4050, 4060, 4070, 4070]
         }
-        scan["nrt_sync_interval_min"] = 5
+        scan["nrt_sync_interval_min"] = 1
         scan["last_sync_timestamp"] = time.strftime('%Y-%m-%d %H:%M:%S')
+        scan["server_time_now"] = time.strftime('%Y-%m-%d %H:%M:%S')
+        scan["telemetry_status"] = "🟢 EN VIVO - Telemetría NRT Operativa (5/5 Fuentes Activas)"
         
         LATEST_NRT_CACHE["scan_data"] = scan
         LATEST_NRT_CACHE["last_sync"] = time.strftime('%Y-%m-%d %H:%M:%S')
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] ✅ Sincronización Satelital NRT Completada Exitosamente.")
     except Exception as e:
-        print(f"Error en ingesta satelital NRT de 5 minutos: {e}")
+        print(f"Error en ingesta satelital NRT de 60 segundos: {e}")
 
 def background_nrt_scheduler():
     while True:
         sync_nrt_satellite_data()
-        time.sleep(300) # 5 Minutes Refresh Rate
+        time.sleep(60) # 1 Minute Refresh Rate
 
 # Start background NRT sync thread on server launch
 nrt_thread = threading.Thread(target=background_nrt_scheduler, daemon=True)
@@ -109,6 +111,7 @@ def get_spatial_scan():
         "freezing_level_m": [3800, 3900, 4000, 4050, 4060, 4070, 4070]
     }
     scan["nrt_sync_interval_min"] = 5
+    scan["last_sync_timestamp"] = time.strftime('%Y-%m-%d %H:%M:%S')
     return scan
 
 

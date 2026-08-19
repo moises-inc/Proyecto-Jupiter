@@ -65,3 +65,6 @@ Paralelamente, resulta imprescindible reforzar la impermeabilización y la canal
 > 10. Tiempo cada hora en La Serena, Coquimbo, Chile \- AccuWeather, [https://www.accuweather.com/es/cl/la-serena/53361/hourly-weather-forecast/53361](https://www.accuweather.com/es/cl/la-serena/53361/hourly-weather-forecast/53361)
 
 [[10_Projects/Proyecto_Centinela/README.md]]
+
+---
+🔗 [[Home]]

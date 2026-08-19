@@ -58,7 +58,12 @@ Desarrollar e implementar un ecosistema resiliente de alerta temprana y monitore
 ---
 
 ---
+
+---
+
+---
 ## 📂 Índice Completo de Documentación Enlazada
+* [[10_Projects/Proyecto_Centinela/.pytest_cache/README|README]]
 * [[10_Projects/Proyecto_Centinela/Docs/Analisis_Viabilidad_Centinela|Analisis Viabilidad Centinela]]
 * [[10_Projects/Proyecto_Centinela/Docs/Centinela_Orchestration_Prompt|Centinela Orchestration Prompt]]
 * [[10_Projects/Proyecto_Centinela/Docs/Estudio_Caso_La_Serena_Lluvias|Estudio Caso La Serena Lluvias]]
@@ -68,6 +73,20 @@ Desarrollar e implementar un ecosistema resiliente de alerta temprana y monitore
 * [[10_Projects/Proyecto_Centinela/Docs/Reporte Lluvias La Serena|Reporte Lluvias La Serena]]
 * [[10_Projects/Proyecto_Centinela/Docs/Sistemas de Emergencia y Monitoreo Tecnológico en Chile|Sistemas de Emergencia y Monitoreo Tecnológico en Chile]]
 * [[10_Projects/Proyecto_Centinela/Docs/analisis_post_desastre_tecnologia|analisis post desastre tecnologia]]
+* [[10_Projects/Proyecto_Centinela/Docs/analisis_precision_satelital_ml|analisis precision satelital ml]]
 * [[10_Projects/Proyecto_Centinela/Docs/analisis_sistemas_emergencia|analisis sistemas emergencia]]
+* [[10_Projects/Proyecto_Centinela/Docs/catálogo_satelitales_complementarios|catálogo satelitales complementarios]]
+* [[10_Projects/Proyecto_Centinela/Docs/diseno_dashboard_puesto_mando|diseno dashboard puesto mando]]
 * [[10_Projects/Proyecto_Centinela/Docs/diseno_presentacion_latex|diseno presentacion latex]]
+* [[10_Projects/Proyecto_Centinela/Docs/guia_operativa_prueba_viernes|guia operativa prueba viernes]]
 * [[10_Projects/Proyecto_Centinela/Docs/informe_lluvias|informe lluvias]]
+* [[10_Projects/Proyecto_Centinela/Docs/planificacion_modelo_ml_satelital|planificacion modelo ml satelital]]
+* [[10_Projects/Proyecto_Centinela/Docs/post_prueba_hallazgos_y_bitacora|post prueba hallazgos y bitacora]]
+* [[10_Projects/Proyecto_Centinela/Docs/wiki/01_architecture_overview|01 architecture overview]]
+* [[10_Projects/Proyecto_Centinela/Docs/wiki/02_ml_model_and_hydrology|02 ml model and hydrology]]
+* [[10_Projects/Proyecto_Centinela/Docs/wiki/03_spatial_grid_scanner|03 spatial grid scanner]]
+* [[10_Projects/Proyecto_Centinela/Docs/wiki/04_dashboard_and_sci201|04 dashboard and sci201]]
+* [[10_Projects/Proyecto_Centinela/ML_Models/.pytest_cache/README|README]]
+* [[10_Projects/Proyecto_Centinela/Pronóstico Meteorológico La Serena|Pronóstico Meteorológico La Serena]]
+* [[10_Projects/Proyecto_Centinela/README|README]]
+* [[10_Projects/Proyecto_Centinela/Task_Logs/task_ceazamet_integration|task ceazamet integration]]
