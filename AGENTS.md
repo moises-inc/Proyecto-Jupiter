@@ -7,7 +7,8 @@ Este archivo configura las reglas de comportamiento, autodeclaración de habilid
 ## 🛠️ Descubrimiento de Habilidades (Agent Skills)
 
 El sistema cuenta con el paquete de habilidades de desarrollo de software `agent-skills` instalado globalmente en:
-`/home/moises/.gemini/config/plugins/agent-skills/skills/`
+`~/.gemini/config/plugins/agent-skills/skills/`
+
 
 ### Reglas Críticas de Selección:
 1. **Analizar la Intención:** Antes de realizar cualquier acción, comprueba si la solicitud mapea con alguna de las habilidades del directorio.
